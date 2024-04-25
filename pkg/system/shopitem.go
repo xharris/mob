@@ -21,8 +21,9 @@ func (s *ShopItemSytem) Update(w engine.World) {
 		e.Get(&shopItem, &render)
 
 		// arrange in grid
-		render.X = sep*float64(i) - render.W/2 + sep
-		render.Y = float64(gh/2) - render.H/2
+		iw, ih := render.GetSize()
+		render.X = sep*float64(i) - float64(iw)/2 + sep
+		render.Y = float64(gh/2) - float64(ih)/2
 
 		i++
 	})

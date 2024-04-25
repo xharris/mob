@@ -5,9 +5,7 @@ import (
 	"sort"
 
 	"github.com/hajimehoshi/ebiten/v2"
-	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/sedyh/mizu/pkg/engine"
-	"golang.org/x/exp/shiny/materialdesign/colornames"
 )
 
 type RenderSystem struct{}
@@ -21,17 +19,9 @@ func (r *RenderSystem) Draw(w engine.World, screen *ebiten.Image) {
 	for _, entity := range rs.entities {
 		var render *component.Render
 		entity.Get(&render)
-		if render.Image == nil {
+		if !render.Visible || render.Image == nil {
 			continue
 		}
-
-		// REMOVE shop item
-		var shopItem *component.ShopItem
-		entity.Get(&shopItem)
-		if shopItem != nil {
-			vector.DrawFilledRect(render.Image, 0, 0, 16, 16, colornames.Blue500, false)
-		}
-
 		// draw to screen
 		render.DrawImageOptions.GeoM.Reset()
 		render.DrawImageOptions.GeoM.Translate(render.X, render.Y)
