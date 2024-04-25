@@ -5,7 +5,6 @@ import (
 	"mob/pkg/pawn"
 	"mob/pkg/system"
 
-	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/sedyh/mizu/pkg/engine"
 )
 
@@ -42,9 +41,12 @@ func (s *Setup) Setup(w engine.World) {
 		w.AddEntities(&shopitem)
 	}
 
-	gw, gh := ebiten.WindowSize()
-	w.AddEntities(&MainTooltipArea{
-		Render:         component.NewRender(float64(gw), float64(gh)),
+	b := w.Bounds().Max
+	mainTTArea := MainTooltipArea{
+		Render:         component.NewRender(float64(b.X), float64(b.Y)),
 		RenderTooltips: component.RenderTooltips{},
-	})
+	}
+	mainTTArea.Render.X = float64(b.X) / 2
+	mainTTArea.Render.Y = 0
+	w.AddEntities(&mainTTArea)
 }
