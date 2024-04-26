@@ -2,40 +2,11 @@ package font
 
 import (
 	"bytes"
-	"log/slog"
 	"os"
 
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	ebitext "github.com/hajimehoshi/ebiten/v2/text/v2"
 )
-
-var faceSource *ebitext.GoTextFaceSource
-
-func GetTextFaceSource() (*ebitext.GoTextFaceSource, error) {
-	if faceSource != nil {
-		return faceSource, nil
-	}
-	data, err := os.ReadFile("asset/font/Retro Gaming.ttf")
-	if err != nil {
-		return nil, err
-	}
-	faceSource, err = ebitext.NewGoTextFaceSource(bytes.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	return faceSource, nil
-}
-
-func Measure(text string, size float64) (w float64, h float64) {
-	fs, err := GetTextFaceSource()
-	if err != nil {
-		slog.Error("cannot measure text", "err", err)
-		return
-	}
-	ff := &ebitext.GoTextFace{Source: fs, Size: size}
-	w, h = ebitext.Measure(text, ff, 0)
-	return
-}
 
 type Font struct {
 	faceSource *ebitext.GoTextFaceSource
