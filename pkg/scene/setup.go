@@ -1,15 +1,15 @@
 package scene
 
 import (
+	"mob/pkg/ally"
 	"mob/pkg/component"
-	"mob/pkg/pawn"
 	"mob/pkg/system"
 
 	"github.com/sedyh/mizu/pkg/engine"
 	"golang.org/x/exp/shiny/materialdesign/colornames"
 )
 
-type ShopPawnItem struct {
+type ShopAlly struct {
 	component.Render
 	component.ShopItem
 	component.Tooltip
@@ -33,14 +33,14 @@ func (s *Setup) Setup(w engine.World) {
 		&system.RenderRect{}, &system.UIRenderLabel{}, &system.UIListLayout{},
 	)
 
-	// 3 free pawns
+	// 3 free allies
 	for range 3 {
-		shopitem := ShopPawnItem{
+		shopitem := ShopAlly{
 			Render: component.NewRender(component.WRenderSize(16, 16)),
 			ShopItem: component.ShopItem{
-				AddMods: []pawn.Mod{
-					{Name: "Slash", Desc: "Swing my sword", Type: pawn.MOD_GOOD},
-					{Name: "Block", Desc: "Block an attack", Type: pawn.MOD_GOOD},
+				AddMods: []ally.Mod{
+					{Name: "Slash", Desc: "Swing my sword", Type: ally.MOD_GOOD},
+					{Name: "Block", Desc: "Block an attack", Type: ally.MOD_GOOD},
 				},
 			},
 			Tooltip: component.Tooltip{

@@ -1,4 +1,4 @@
-package pawn
+package ally
 
 type ModType int
 

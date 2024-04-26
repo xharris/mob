@@ -1,15 +1,15 @@
 package component
 
 import (
-	"mob/pkg/pawn"
+	"mob/pkg/ally"
 
 	"golang.org/x/exp/shiny/materialdesign/colornames"
 )
 
 type ShopItem struct {
-	AddMods     []pawn.Mod
-	RemoveMods  []pawn.Mod
-	UpgradeMods []pawn.Mod
+	AddMods     []ally.Mod
+	RemoveMods  []ally.Mod
+	UpgradeMods []ally.Mod
 }
 
 func (s *ShopItem) GetUIText() (ui UILabel) {
