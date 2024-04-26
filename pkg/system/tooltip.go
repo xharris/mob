@@ -3,65 +3,63 @@ package system
 import (
 	"log/slog"
 	"mob/pkg/component"
+	"mob/pkg/font"
 
 	"github.com/sedyh/mizu/pkg/engine"
 )
 
-type TooltipSystem struct {
-	*component.Tooltip
-	*component.Render
+type TooltipSystem struct{}
+
+type TooltipLabel struct {
+	component.Render
+	component.UILabel
+	component.UIChild
 }
 
-func (t *TooltipSystem) Update(w engine.World) {
-	// show tooltip text on hover
-	if t.Render.MouseEntered() {
-		slog.Info("entered")
-		t.Tooltip.Shown = true
+func (*TooltipSystem) Update(w engine.World) {
+	view := w.View(component.Tooltip{}, component.Render{})
+	f := font.DefaultFont
+	for _, t := range view.Filter() {
+		var r *component.Render
+		var tt *component.Tooltip
+		t.Get(&r, &tt)
+		// show tooltip text on hover
+		if r.MouseEntered() {
+			slog.Info("entered")
+			tt.Shown = true
+			// show ui label
+			var height float64
+			for _, text := range tt.Text {
+				if text.Font != nil {
+					f = text.Font
+				}
+				_, h := f.Measure(text.Text)
+				height += h
+			}
+			label := TooltipLabel{
+				Render: component.NewRender(),
+				UILabel: component.UILabel{
+					Text: tt.Text,
+				},
+				UIChild: component.UIChild{
+					Parent: tt.Parent,
+					H:      int(height),
+				},
+			}
+			w.AddEntities(&label)
+		}
+		if r.MouseExited() {
+			slog.Info("exited")
+			tt.Shown = false
+			// remove ui label
+			labels := w.View(component.UILabel{}, component.UIChild{}, component.Render{})
+			labels.Each(func(e engine.Entity) {
+				var ch *component.UIChild
+				e.Get(&ch)
+				if ch != nil && ch.Parent == tt.Parent {
+					w.RemoveEntity(e)
+				}
+			})
+		}
 	}
-	if t.Render.MouseExited() {
-		slog.Info("exited")
-		t.Tooltip.Shown = false
-	}
 }
-
-type RenderTooltips struct {
-	*component.RenderTooltips
-	*component.Render
-}
-
-// func (r *RenderTooltips) Update(w engine.World) {
-// 	faceSource := font.GetTextFaceSource()
-// 	if faceSource == nil {
-// 		loadTextFaceSource()
-// 		r.Render.Image = ebiten.NewImage(ebiten.WindowSize())
-// 	}
-// 	tooltips := w.View(component.Tooltip{})
-
-// 	r.Render.Image.Clear()
-// 	for _, entity := range tooltips.Filter() {
-// 		var tt *component.Tooltip
-// 		entity.Get(&tt)
-// 		var w, h float64
-// 		if tt.Shown {
-// 			for _, txt := range tt.Text {
-// 				var txtW, txtH float64
-// 				// draw text
-// 				if len(txt.Text) > 0 {
-// 					op := &text.DrawOptions{}
-// 					op.LayoutOptions.SecondaryAlign = text.AlignEnd
-// 					op.GeoM.Translate(w, h)
-// 					op.ColorScale.ScaleWithColor(txt.Color)
-// 					ff := &text.GoTextFace{Source: faceSource, Size: 14}
-// 					txtW, txtH = text.Measure(txt.Text, ff, 0)
-// 					text.Draw(r.Render.Image, txt.Text, ff, op)
-// 					w += txtW
-// 				}
-// 				// new line
-// 				if txt.Newline {
-// 					w = 0
-// 					h += txtH
-// 				}
-// 			}
-// 		}
-// 	}
-// }

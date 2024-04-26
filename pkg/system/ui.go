@@ -50,6 +50,7 @@ type UIListLayout struct {
 
 func (ui *UIListLayout) Update(w engine.World) {
 	items := w.View(component.UIChild{})
+	size := ui.Render.Image.Bounds().Max
 
 	i := 0
 	var x, y float64
@@ -64,19 +65,24 @@ func (ui *UIListLayout) Update(w engine.World) {
 		// arrange nodes in list
 		render.Resize(int(child.W), int(child.H))
 		render.X = ui.Render.X + x
-		render.Y = ui.Render.Y + y
+		if ui.UIList.Reverse && ui.UIList.Direction == component.VERTICAL {
+			y += float64(child.H)
+			render.Y = ui.Render.Y + float64(size.Y) - y
+		} else {
+			render.Y = ui.Render.Y + y
+			y += float64(child.H)
+		}
 		x += float64(child.W)
-		y += float64(child.H)
 		i++
 	})
 }
 
-type UIRenderText struct {
+type UIRenderLabel struct {
 	*component.Render
 	*component.UILabel
 }
 
-func (t *UIRenderText) Update(world engine.World) {
+func (t *UIRenderLabel) Update(world engine.World) {
 	size := t.Render.Image.Bounds().Max
 
 	var x, y float64
@@ -90,6 +96,7 @@ func (t *UIRenderText) Update(world engine.World) {
 		if txt.Font != nil {
 			f = txt.Font
 		}
+		ff := f.Face()
 		// draw text
 		if len(txt.Text) > 0 {
 			for _, char := range txt.Text {
@@ -100,9 +107,9 @@ func (t *UIRenderText) Update(world engine.World) {
 				op.LayoutOptions.SecondaryAlign = t.UILabel.VAlign
 				op.ColorScale.ScaleWithColor(txt.Color)
 				// draw
-				text.Draw(t.Render.Image, string(char), f.Face(), op)
+				text.Draw(t.Render.Image, string(char), &ff, op)
 				// measure
-				txtW, txtH = text.Measure(string(char), f.Face(), 0)
+				txtW, txtH = text.Measure(string(char), &ff, 0)
 				// space between chars
 				if char == ' ' {
 					x += txtW

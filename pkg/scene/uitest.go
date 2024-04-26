@@ -31,7 +31,7 @@ type TestLabel struct {
 
 func (u *UITest) Setup(w engine.World) {
 	w.AddComponents(component.UIGrid{}, component.UILabel{}, component.UIChild{}, component.Render{}, component.UIList{})
-	w.AddSystems(&system.UIGridLayout{}, &system.RenderSystem{}, &system.UIRenderText{}, &system.UIListLayout{})
+	w.AddSystems(&system.UIGridLayout{}, &system.RenderSystem{}, &system.UIRenderLabel{}, &system.UIListLayout{})
 
 	grid := TestContainer{
 		Render: component.NewRender(component.WGameSize()),

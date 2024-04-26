@@ -17,15 +17,21 @@ type ShopPawnItem struct {
 }
 
 type MainTooltipArea struct {
-	component.RenderTooltips
+	component.UIList
 	component.Render
 }
 
 type Setup struct{}
 
 func (s *Setup) Setup(w engine.World) {
-	w.AddComponents(component.Render{}, component.ShopItem{}, component.Tooltip{}, component.RenderTooltips{}, component.Rect{})
-	w.AddSystems(&system.RenderSystem{}, &system.ShopItemSytem{}, &system.TooltipSystem{}, &system.RenderTooltips{}, &system.RenderRect{})
+	w.AddComponents(
+		component.Render{}, component.ShopItem{}, component.Tooltip{}, component.Rect{},
+		component.UIList{}, component.UILabel{}, component.UIChild{},
+	)
+	w.AddSystems(
+		&system.RenderSystem{}, &system.ShopItemSytem{}, &system.TooltipSystem{},
+		&system.RenderRect{}, &system.UIRenderLabel{}, &system.UIListLayout{},
+	)
 
 	// 3 free pawns
 	for range 3 {
@@ -37,7 +43,9 @@ func (s *Setup) Setup(w engine.World) {
 					{Name: "Block", Desc: "Block an attack", Type: pawn.MOD_GOOD},
 				},
 			},
-			Tooltip: component.Tooltip{},
+			Tooltip: component.Tooltip{
+				Parent: "shop-item-tooltip",
+			},
 			Rect: component.Rect{
 				Color: colornames.Blue500,
 			},
@@ -48,10 +56,14 @@ func (s *Setup) Setup(w engine.World) {
 
 	b := w.Bounds().Max
 	mainTTArea := MainTooltipArea{
-		Render:         component.NewRender(component.WRenderSize(b.X, b.Y)),
-		RenderTooltips: component.RenderTooltips{},
+		Render: component.NewRender(component.WRenderSize(b.X, b.Y)),
+		UIList: component.UIList{
+			ID:        "shop-item-tooltip",
+			Direction: component.VERTICAL,
+			Reverse:   true,
+		},
 	}
-	mainTTArea.Render.X = 0 // float64(b.X) / 2
-	mainTTArea.Render.Y = 0
+	mainTTArea.Render.X = 10
+	mainTTArea.Render.Y = -10
 	w.AddEntities(&mainTTArea)
 }

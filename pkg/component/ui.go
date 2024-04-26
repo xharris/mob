@@ -7,8 +7,10 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
+type UI_ID string
+
 type UIGrid struct {
-	ID      string
+	ID      UI_ID
 	Rows    int
 	Columns int
 }
@@ -21,12 +23,16 @@ const (
 )
 
 type UIList struct {
-	ID        string
+	ID        UI_ID
 	Direction UIListDirection
+	Reverse   bool
 }
 
+/*
+# When adding a UIChild to UIList, dont forget to set W or H
+*/
 type UIChild struct {
-	Parent string
+	Parent UI_ID
 	// grid position
 	X, Y int
 	// list item size
@@ -37,12 +43,14 @@ type UILabelText struct {
 	Color   color.Color
 	Text    string
 	Newline bool
-	Font    *font.Font
+	// can be nil
+	Font *font.Font
 }
 
 type UILabel struct {
 	Text   []UILabelText
 	HAlign text.Align
 	VAlign text.Align
-	Font   *font.Font
+	// can be nil
+	Font *font.Font
 }
