@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"os"
 
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	ebitext "github.com/hajimehoshi/ebiten/v2/text/v2"
 )
 
@@ -45,6 +44,6 @@ func (f *Font) Measure(text string) (float64, float64) {
 	return ebitext.Measure(text, f.Face(), 0)
 }
 
-func (f *Font) Face() text.Face {
-	return &text.GoTextFace{Source: f.faceSource, Size: f.Size}
+func (f *Font) Face() ebitext.Face {
+	return &ebitext.GoTextFace{Source: f.faceSource, Size: f.Size}
 }
