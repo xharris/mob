@@ -10,9 +10,10 @@ import (
 )
 
 type Font struct {
-	faceSource *ebitext.GoTextFaceSource
-	Name       string
-	Size       float64
+	faceSource  *ebitext.GoTextFaceSource
+	Name        string
+	Size        float64
+	LineSpacing float64
 }
 
 type FontOption func(*Font)
@@ -28,7 +29,7 @@ func Init() {
 }
 
 func NewFont(name string, opts ...FontOption) (*Font, error) {
-	f := &Font{Name: name}
+	f := &Font{Name: name, LineSpacing: 1}
 	// load face source
 	data, err := os.ReadFile(name)
 	if err != nil {
@@ -50,6 +51,12 @@ func NewFont(name string, opts ...FontOption) (*Font, error) {
 func WFontSize(size float64) FontOption {
 	return func(f *Font) {
 		f.Size = size
+	}
+}
+
+func WFontLineSpacing(spacing float64) FontOption {
+	return func(f *Font) {
+		f.LineSpacing = spacing
 	}
 }
 

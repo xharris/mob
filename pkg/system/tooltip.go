@@ -1,7 +1,6 @@
 package system
 
 import (
-	"log/slog"
 	"mob/pkg/component"
 	"mob/pkg/font"
 
@@ -25,7 +24,6 @@ func (*TooltipSystem) Update(w engine.World) {
 		t.Get(&r, &tt)
 		// show tooltip text on hover
 		if r.MouseEntered() {
-			slog.Info("entered")
 			tt.Shown = true
 			// show ui label
 			var height float64
@@ -49,7 +47,6 @@ func (*TooltipSystem) Update(w engine.World) {
 			w.AddEntities(&label)
 		}
 		if r.MouseExited() {
-			slog.Info("exited")
 			tt.Shown = false
 			// remove ui label
 			labels := w.View(component.UILabel{}, component.UIChild{}, component.Render{})

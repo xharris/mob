@@ -1,10 +1,10 @@
-package ally
+package allymod
 
 type ModType int
 
 const (
-	MOD_GOOD ModType = iota
-	MOD_BAD
+	GOOD ModType = iota
+	BAD
 )
 
 type Mod struct {

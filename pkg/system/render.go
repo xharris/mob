@@ -5,7 +5,9 @@ import (
 	"sort"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/sedyh/mizu/pkg/engine"
+	"golang.org/x/exp/shiny/materialdesign/colornames"
 )
 
 type RenderSystem struct{}
@@ -21,6 +23,14 @@ func (r *RenderSystem) Draw(w engine.World, screen *ebiten.Image) {
 		entity.Get(&render)
 		if !render.Visible || render.Image == nil {
 			continue
+		}
+		// draw rect
+		if render.Debug {
+			vector.StrokeRect(
+				render.Image,
+				1, 1, float32(render.Image.Bounds().Dx()-1), float32(render.Image.Bounds().Dy()-1),
+				1, colornames.Green200, false,
+			)
 		}
 		// draw to screen
 		render.DrawImageOptions.GeoM.Reset()

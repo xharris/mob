@@ -10,6 +10,7 @@ type Render struct {
 	X, Y             float64
 	mouseInside      bool
 	Visible          bool
+	Debug            bool
 }
 
 type RenderOption func(*Render)
@@ -43,6 +44,12 @@ func WGameSize() RenderOption {
 	}
 }
 
+func WRenderDebug() RenderOption {
+	return func(r *Render) {
+		r.Debug = true
+	}
+}
+
 func (r *Render) Resize(w, h int) {
 	if w != r.w && h != r.h {
 		newImage := ebiten.NewImage(w, h)
@@ -54,6 +61,13 @@ func (r *Render) Resize(w, h int) {
 func (r *Render) GetSize() (int, int) {
 	bounds := r.Image.Bounds().Max
 	return bounds.X, bounds.Y
+}
+
+// resize other to fit inside r
+func (r *Render) Fit(other *Render) {
+	w, h := r.GetSize()
+	otherW, otherH := other.GetSize()
+	other.Resize(min(w, otherW), min(h, otherH))
 }
 
 func (r *Render) MouseEntered() bool {
@@ -80,4 +94,8 @@ func (r *Render) MouseExited() bool {
 		return true
 	}
 	return false
+}
+
+func (r *Render) MouseInside() bool {
+	return r.mouseInside
 }

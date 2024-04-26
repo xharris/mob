@@ -3,7 +3,6 @@ package scene
 import (
 	"fmt"
 	"mob/pkg/component"
-	"mob/pkg/font"
 	"mob/pkg/system"
 
 	"github.com/sedyh/mizu/pkg/engine"
@@ -43,11 +42,15 @@ func (u *UITest) Setup(w engine.World) {
 	}
 	w.AddEntities(&grid)
 
+	aligns := []component.UIAlign{
+		component.START, component.CENTER, component.END,
+	}
+
 	for x := range 3 {
 		for y := range 3 {
 			if x == 1 && y == 1 {
 				// 3 texts in vertical list
-				subgrid := TestSubContainer{
+				sublist := TestSubContainer{
 					Render: component.NewRender(),
 					UIList: component.UIList{
 						ID:        "center",
@@ -59,9 +62,8 @@ func (u *UITest) Setup(w engine.World) {
 						Y:      y,
 					},
 				}
-				w.AddEntities(&subgrid)
+				w.AddEntities(&sublist)
 				for range 3 {
-					_, txtH := font.DefaultFont.Measure(fmt.Sprintf("row %d", x))
 					txt := TestLabel{
 						Render: component.NewRender(),
 						UILabel: component.UILabel{
@@ -72,7 +74,6 @@ func (u *UITest) Setup(w engine.World) {
 						},
 						UIChild: component.UIChild{
 							Parent: "center",
-							H:      int(txtH),
 						},
 					}
 					w.AddEntities(&txt)
@@ -86,13 +87,10 @@ func (u *UITest) Setup(w engine.World) {
 					},
 					UIChild: component.UIChild{
 						Parent: "center",
-						X:      x,
-						Y:      y,
 					},
 				}
 				w.AddEntities(&subsubgrid)
 				for i := range 3 {
-					txtW, _ := font.DefaultFont.Measure(fmt.Sprintf("center %d", i))
 					txt := TestLabel{
 						Render: component.NewRender(),
 						UILabel: component.UILabel{
@@ -101,20 +99,19 @@ func (u *UITest) Setup(w engine.World) {
 							},
 						},
 						UIChild: component.UIChild{
-							Parent: "center",
-							W:      int(txtW),
+							Parent: "center-footer",
 						},
 					}
 					w.AddEntities(&txt)
 				}
 			} else {
-				txt := TestLabel{
-					Render: component.NewRender(),
-					UILabel: component.UILabel{
-						Text: []component.UILabelText{
-							{Text: fmt.Sprintf("row %d", x), Color: colornames.White},
-							{Text: fmt.Sprintf(" col %d", y), Color: colornames.White},
-						},
+				txtContainerID := component.UI_ID(fmt.Sprintf("text-container-%d-%d", x, y))
+				txtContainer := TestSubContainer{
+					Render: component.NewRender(component.WRenderDebug()),
+					UIList: component.UIList{
+						ID:      txtContainerID,
+						Align:   aligns[x],
+						Justify: aligns[y],
 					},
 					UIChild: component.UIChild{
 						Parent: "test",
@@ -122,7 +119,20 @@ func (u *UITest) Setup(w engine.World) {
 						Y:      y,
 					},
 				}
-				w.AddEntities(&txt)
+				txt := TestLabel{
+					Render: component.NewRender(component.WRenderDebug()),
+					UILabel: component.UILabel{
+						Text: []component.UILabelText{
+							{Text: fmt.Sprintf("rowfeafew %d", x), Color: colornames.White},
+							{Newline: true},
+							{Text: fmt.Sprintf("col %d", y), Color: colornames.White},
+						},
+					},
+					UIChild: component.UIChild{
+						Parent: txtContainerID,
+					},
+				}
+				w.AddEntities(&txtContainer, &txt)
 			}
 		}
 	}

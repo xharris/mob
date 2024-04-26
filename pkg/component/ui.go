@@ -22,10 +22,20 @@ const (
 	HORIZONTAL
 )
 
+type UIAlign int
+
+const (
+	START UIAlign = iota
+	CENTER
+	END
+)
+
 type UIList struct {
 	ID        UI_ID
 	Direction UIListDirection
 	Reverse   bool
+	Align     UIAlign
+	Justify   UIAlign
 }
 
 /*
