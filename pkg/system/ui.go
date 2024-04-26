@@ -9,18 +9,17 @@ import (
 	"github.com/sedyh/mizu/pkg/engine"
 )
 
-type UILayout struct {
+type UIGridLayout struct {
 	*component.UIGrid
 	*component.Render
 }
 
-func (ui *UILayout) Update(w engine.World) {
+func (ui *UIGridLayout) Update(w engine.World) {
 	uiW, uiH := ui.Render.GetSize()
 	var (
 		cellW float64 = float64(uiW / ui.UIGrid.Columns)
 		cellH float64 = float64(uiH / ui.UIGrid.Rows)
 	)
-	slog.Debug("ui layout", "W", cellW, "H", cellH)
 
 	items := w.View(component.UIChild{})
 
@@ -35,9 +34,45 @@ func (ui *UILayout) Update(w engine.World) {
 		}
 		// arrange nodes in grid
 		render.Resize(int(cellW), int(cellH))
-		render.X = float64(i/ui.UIGrid.Columns) * cellW
-		render.Y = float64(i%ui.UIGrid.Columns) * cellH
+		render.X = ui.Render.X + float64(child.X)*cellW
+		render.Y = ui.Render.Y + float64(child.Y)*cellH
+		// REMOVE? auto-arrange
+		// render.X = float64(i/ui.UIGrid.Columns) * cellW
+		// render.Y = float64(i%ui.UIGrid.Columns) * cellH
 
+		i++
+	})
+}
+
+type UIListLayout struct {
+	*component.UIList
+	*component.Render
+}
+
+func (ui *UIListLayout) Update(w engine.World) {
+	// uiW, uiH := ui.Render.GetSize()
+
+	items := w.View(component.UIChild{})
+
+	i := 0
+	var x, y float64
+	items.Each(func(e engine.Entity) {
+		var child *component.UIChild
+		var render *component.Render
+		e.Get(&child, &render)
+		// belongs to this grid?
+		if child.Parent != ui.UIList.ID {
+			return
+		}
+		// arrange nodes in list
+		render.Resize(int(child.W), int(child.H))
+		render.X = ui.Render.X + x
+		render.Y = ui.Render.Y + y
+		x += float64(child.W)
+		y += float64(child.H)
+		// REMOVE? auto-arrange
+		// render.X = float64(i/ui.UIGrid.Columns) * cellW
+		// render.Y = float64(i%ui.UIGrid.Columns) * cellH
 		i++
 	})
 }
