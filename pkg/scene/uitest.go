@@ -2,12 +2,10 @@ package scene
 
 import (
 	"fmt"
-	"log/slog"
 	"mob/pkg/component"
 	"mob/pkg/font"
 	"mob/pkg/system"
 
-	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/sedyh/mizu/pkg/engine"
 	"golang.org/x/exp/shiny/materialdesign/colornames"
 )
@@ -48,12 +46,6 @@ func (u *UITest) Setup(w engine.World) {
 	for x := range 3 {
 		for y := range 3 {
 			if x == 1 && y == 1 {
-				textFace, err := font.GetTextFaceSource()
-				if err != nil {
-					slog.Error("could not render center text", "err", err)
-					continue
-				}
-				ff := &text.GoTextFace{Source: textFace, Size: 14}
 				// 3 texts in vertical list
 				subgrid := TestSubContainer{
 					Render: component.NewRender(),
@@ -69,7 +61,7 @@ func (u *UITest) Setup(w engine.World) {
 				}
 				w.AddEntities(&subgrid)
 				for range 3 {
-					_, txtH := text.Measure(fmt.Sprintf("row %d", x), ff, 0)
+					_, txtH := font.DefaultFont.Measure(fmt.Sprintf("row %d", x))
 					txt := TestLabel{
 						Render: component.NewRender(),
 						UILabel: component.UILabel{
@@ -100,7 +92,7 @@ func (u *UITest) Setup(w engine.World) {
 				}
 				w.AddEntities(&subsubgrid)
 				for i := range 3 {
-					txtW, _ := text.Measure(fmt.Sprintf("center %d", i), ff, 0)
+					txtW, _ := font.DefaultFont.Measure(fmt.Sprintf("center %d", i))
 					txt := TestLabel{
 						Render: component.NewRender(),
 						UILabel: component.UILabel{

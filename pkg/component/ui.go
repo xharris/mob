@@ -2,6 +2,7 @@ package component
 
 import (
 	"image/color"
+	"mob/pkg/font"
 
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 )
@@ -36,10 +37,12 @@ type UILabelText struct {
 	Color   color.Color
 	Text    string
 	Newline bool
+	Font    *font.Font
 }
 
 type UILabel struct {
 	Text   []UILabelText
 	HAlign text.Align
 	VAlign text.Align
+	Font   *font.Font
 }

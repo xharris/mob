@@ -1,7 +1,6 @@
 package system
 
 import (
-	"log/slog"
 	"mob/pkg/component"
 	"mob/pkg/font"
 
@@ -50,8 +49,6 @@ type UIListLayout struct {
 }
 
 func (ui *UIListLayout) Update(w engine.World) {
-	// uiW, uiH := ui.Render.GetSize()
-
 	items := w.View(component.UIChild{})
 
 	i := 0
@@ -70,9 +67,6 @@ func (ui *UIListLayout) Update(w engine.World) {
 		render.Y = ui.Render.Y + y
 		x += float64(child.W)
 		y += float64(child.H)
-		// REMOVE? auto-arrange
-		// render.X = float64(i/ui.UIGrid.Columns) * cellW
-		// render.Y = float64(i%ui.UIGrid.Columns) * cellH
 		i++
 	})
 }
@@ -84,17 +78,18 @@ type UIRenderText struct {
 
 func (t *UIRenderText) Update(world engine.World) {
 	size := t.Render.Image.Bounds().Max
-	faceSource, err := font.GetTextFaceSource()
-	if err != nil {
-		slog.Error("UIRenderText update failed", "err", err)
-		return
-	}
 
 	var x, y float64
 	var txtW, txtH float64
 	t.Render.Image.Clear()
-	ff := &text.GoTextFace{Source: faceSource, Size: 14}
+	f := font.DefaultFont
+	if t.UILabel.Font != nil {
+		f = t.UILabel.Font
+	}
 	for _, txt := range t.UILabel.Text {
+		if txt.Font != nil {
+			f = txt.Font
+		}
 		// draw text
 		if len(txt.Text) > 0 {
 			for _, char := range txt.Text {
@@ -105,9 +100,9 @@ func (t *UIRenderText) Update(world engine.World) {
 				op.LayoutOptions.SecondaryAlign = t.UILabel.VAlign
 				op.ColorScale.ScaleWithColor(txt.Color)
 				// draw
-				text.Draw(t.Render.Image, string(char), ff, op)
+				text.Draw(t.Render.Image, string(char), f.Face(), op)
 				// measure
-				txtW, txtH = text.Measure(string(char), ff, 0)
+				txtW, txtH = text.Measure(string(char), f.Face(), 0)
 				// space between chars
 				if char == ' ' {
 					x += txtW
