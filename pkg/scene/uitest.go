@@ -33,14 +33,21 @@ func (u *UITest) Setup(w engine.World) {
 	w.AddSystems(&system.UIGridLayout{}, &system.RenderSystem{}, &system.UIRenderLabel{}, &system.UIListLayout{})
 
 	grid := TestContainer{
-		Render: component.NewRender(component.WGameSize()),
+		Render: component.NewRender(),
 		UIGrid: component.UIGrid{
 			ID:      "test",
 			Rows:    3,
 			Columns: 3,
 		},
 	}
-	w.AddEntities(&grid)
+	autoGrid := TestContainer{
+		Render: component.NewRender(),
+		UIGrid: component.UIGrid{
+			ID:      "auto-grid",
+			Columns: 3,
+		},
+	}
+	w.AddEntities(&grid, &autoGrid)
 
 	aligns := []component.UIAlign{
 		component.START, component.CENTER, component.END,
@@ -48,6 +55,44 @@ func (u *UITest) Setup(w engine.World) {
 
 	for x := range 3 {
 		for y := range 3 {
+			// auto-grid item
+			autoListID := component.UI_ID(fmt.Sprintf("auto-list-%d-%d", x, y))
+			autoList := TestSubContainer{
+				Render: component.NewRender(),
+				UIList: component.UIList{
+					ID:      autoListID,
+					Align:   component.CENTER,
+					Justify: component.CENTER,
+				},
+				UIChild: component.UIChild{
+					Parent: "auto-grid",
+				},
+			}
+			w.AddEntities(&autoList)
+			autoItemX := TestLabel{
+				Render: component.NewRender(),
+				UILabel: component.UILabel{
+					Text: []component.UILabelText{
+						{Text: fmt.Sprintf("x=%d", x), Color: colornames.Blue200},
+					},
+				},
+				UIChild: component.UIChild{
+					Parent: autoListID,
+				},
+			}
+			autoItemY := TestLabel{
+				Render: component.NewRender(),
+				UILabel: component.UILabel{
+					Text: []component.UILabelText{
+						{Text: fmt.Sprintf("y=%d", y), Color: colornames.Blue200},
+					},
+				},
+				UIChild: component.UIChild{
+					Parent: autoListID,
+				},
+			}
+			w.AddEntities(&autoItemX, &autoItemY)
+
 			if x == 1 && y == 1 {
 				// 3 texts in vertical list
 				sublist := TestSubContainer{
@@ -107,7 +152,7 @@ func (u *UITest) Setup(w engine.World) {
 			} else {
 				txtContainerID := component.UI_ID(fmt.Sprintf("text-container-%d-%d", x, y))
 				txtContainer := TestSubContainer{
-					Render: component.NewRender(component.WRenderDebug()),
+					Render: component.NewRender(),
 					UIList: component.UIList{
 						ID:      txtContainerID,
 						Align:   aligns[x],
@@ -120,10 +165,10 @@ func (u *UITest) Setup(w engine.World) {
 					},
 				}
 				txt := TestLabel{
-					Render: component.NewRender(component.WRenderDebug()),
+					Render: component.NewRender(),
 					UILabel: component.UILabel{
 						Text: []component.UILabelText{
-							{Text: fmt.Sprintf("rowfeafew %d", x), Color: colornames.White},
+							{Text: fmt.Sprintf("row %d", x), Color: colornames.White},
 							{Newline: true},
 							{Text: fmt.Sprintf("col %d", y), Color: colornames.White},
 						},

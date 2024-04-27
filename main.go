@@ -15,7 +15,7 @@ func main() {
 	ebiten.SetWindowSize(600, 400)
 	ebiten.SetWindowTitle("allies in a dungeon")
 
-	if err := ebiten.RunGame(engine.NewGame(&scene.UITest{})); err != nil {
+	if err := ebiten.RunGame(engine.NewGame(&scene.Shop{})); err != nil {
 		log.Fatal(err)
 	}
 }

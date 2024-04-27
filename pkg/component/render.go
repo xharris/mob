@@ -50,6 +50,13 @@ func WRenderDebug() RenderOption {
 	}
 }
 
+func WRenderPosition(x, y float64) RenderOption {
+	return func(r *Render) {
+		r.X = x
+		r.Y = y
+	}
+}
+
 func (r *Render) Resize(w, h int) {
 	if w != r.w && h != r.h {
 		newImage := ebiten.NewImage(w, h)
@@ -70,13 +77,17 @@ func (r *Render) Fit(other *Render) {
 	other.Resize(min(w, otherW), min(h, otherH))
 }
 
-func (r *Render) MouseEntered() bool {
+func (r *Render) MouseInside() bool {
 	geom := r.DrawImageOptions.GeoM
 	geom.Invert()
 	imx, imy := ebiten.CursorPosition()
 	mx, my := geom.Apply(float64(imx), float64(imy))
 	w, h := r.GetSize()
-	if !r.mouseInside && mx > 0 && mx < float64(w) && my > 0 && my < float64(h) {
+	return mx > 0 && mx < float64(w) && my > 0 && my < float64(h)
+}
+
+func (r *Render) MouseEntered() bool {
+	if !r.mouseInside && r.MouseInside() {
 		r.mouseInside = true
 		return true
 	}
@@ -84,18 +95,9 @@ func (r *Render) MouseEntered() bool {
 }
 
 func (r *Render) MouseExited() bool {
-	geom := r.DrawImageOptions.GeoM
-	geom.Invert()
-	imx, imy := ebiten.CursorPosition()
-	mx, my := geom.Apply(float64(imx), float64(imy))
-	w, h := r.GetSize()
-	if r.mouseInside && !(mx > 0 && mx < float64(w) && my > 0 && my < float64(h)) {
+	if r.mouseInside && !r.MouseInside() {
 		r.mouseInside = false
 		return true
 	}
 	return false
-}
-
-func (r *Render) MouseInside() bool {
-	return r.mouseInside
 }

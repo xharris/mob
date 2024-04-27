@@ -13,6 +13,8 @@ type UIGrid struct {
 	ID      UI_ID
 	Rows    int
 	Columns int
+	Align   UIAlign
+	Justify UIAlign
 }
 
 type UIListDirection int
@@ -31,22 +33,19 @@ const (
 )
 
 type UIList struct {
-	ID        UI_ID
-	Direction UIListDirection
-	Reverse   bool
-	Align     UIAlign
-	Justify   UIAlign
+	ID          UI_ID
+	Direction   UIListDirection
+	Reverse     bool
+	Align       UIAlign
+	Justify     UIAlign
+	FitContents bool
 }
 
-/*
-# When adding a UIChild to UIList, dont forget to set W or H
-*/
 type UIChild struct {
+	ID     UI_ID
 	Parent UI_ID
 	// grid position
-	X, Y int
-	// list item size
-	W, H int
+	X, Y, I int
 }
 
 type UILabelText struct {

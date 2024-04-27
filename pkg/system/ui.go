@@ -7,6 +7,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2/text/v2"
 	"github.com/sedyh/mizu/pkg/engine"
+	"golang.org/x/exp/shiny/materialdesign/colornames"
 )
 
 type UIGridLayout struct {
@@ -16,32 +17,63 @@ type UIGridLayout struct {
 
 func (ui *UIGridLayout) Update(w engine.World) {
 	uiW, uiH := ui.Render.GetSize()
-	var (
-		cellW float64 = float64(uiW / ui.UIGrid.Columns)
-		cellH float64 = float64(uiH / ui.UIGrid.Rows)
-	)
+
+	var columns, rows int
 
 	items := w.View(component.UIChild{})
+	var children []engine.Entity
 
-	i := 0
-	items.Each(func(e engine.Entity) {
+	// belongs to this grid?
+	for _, e := range items.Filter() {
+		var child *component.UIChild
+		e.Get(&child)
+		if child.Parent == ui.UIGrid.ID {
+			children = append(children, e)
+		}
+	}
+
+	// calculate rows if only columns is given
+	columns = max(1, ui.UIGrid.Columns)
+	autoArrange := ui.UIGrid.Rows == 0
+	if autoArrange {
+		rows = max(1, len(children)/columns)
+	} else {
+		rows = ui.UIGrid.Rows
+	}
+
+	cellW := float64(uiW / columns)
+	cellH := float64(uiH / rows)
+
+	for i, e := range children {
 		var child *component.UIChild
 		var render *component.Render
-		e.Get(&child, &render)
-		// belongs to this grid?
-		if child.Parent != ui.UIGrid.ID {
-			return
+		var list *component.UIList
+		e.Get(&child, &render, &list)
+		if list != nil {
+			render.Resize(int(cellW), int(cellH))
 		}
-		// arrange nodes in grid
-		render.Resize(int(cellW), int(cellH))
-		render.X = ui.Render.X + float64(child.X)*cellW
-		render.Y = ui.Render.Y + float64(child.Y)*cellH
-		// REMOVE? auto-arrange
-		// render.X = float64(i/ui.UIGrid.Columns) * cellW
-		// render.Y = float64(i%ui.UIGrid.Columns) * cellH
-
-		i++
-	})
+		x, y := child.X, child.Y
+		if autoArrange {
+			x = int(i / columns)
+			y = int(i % columns)
+		}
+		render.X = ui.Render.X + float64(x)*cellW
+		render.Y = ui.Render.Y + float64(y)*cellH
+		// alignment
+		dx, dy := render.GetSize()
+		if ui.UIGrid.Justify == component.CENTER {
+			render.X += float64(cellW)/2 - float64(dx)/2
+		}
+		if ui.UIGrid.Justify == component.END {
+			render.X += float64(cellW) - float64(dx)
+		}
+		if ui.UIGrid.Align == component.CENTER {
+			render.Y += float64(cellH)/2 - float64(dy)/2
+		}
+		if ui.UIGrid.Align == component.END {
+			render.Y += float64(cellH) - float64(dy)
+		}
+	}
 }
 
 type UIListLayout struct {
@@ -57,6 +89,7 @@ func (ui *UIListLayout) Update(w engine.World) {
 	if ui.UIList.Reverse {
 		slices.Reverse(items)
 	}
+	var totalW, totalH int
 	for _, e := range items {
 		var child *component.UIChild
 		var render *component.Render
@@ -65,26 +98,28 @@ func (ui *UIListLayout) Update(w engine.World) {
 		if child.Parent != ui.UIList.ID {
 			continue
 		}
-		ui.Render.Fit(render)
 		childW, childH := render.GetSize()
+		totalW += childW
+		totalH += childH
 		// arrange nodes in list
 		render.X = ui.Render.X + x
 		render.Y = ui.Render.Y + y
 
+		dx, dy := float64(ui.Render.Image.Bounds().Dx()), float64(ui.Render.Image.Bounds().Dy())
 		if ui.UIList.Direction == component.HORIZONTAL {
 			x += float64(childW)
 			// alignment
 			if ui.UIList.Justify == component.CENTER {
-				render.X += float64(ui.Render.Image.Bounds().Dx())/2 - float64(childW)/2
+				render.X += dx/2 - float64(childW)/2
 			}
 			if ui.UIList.Justify == component.END {
-				render.X += float64(ui.Render.Image.Bounds().Dx()) - float64(childW)
+				render.X += dx - float64(childW)
 			}
 			if ui.UIList.Align == component.CENTER {
-				render.Y += float64(ui.Render.Image.Bounds().Dy())/2 - float64(childH)/2
+				render.Y += dy/2 - float64(childH)/2
 			}
 			if ui.UIList.Align == component.END {
-				render.Y += float64(ui.Render.Image.Bounds().Dy()) - float64(childH)
+				render.Y += dy - float64(childH)
 			}
 		}
 
@@ -92,19 +127,23 @@ func (ui *UIListLayout) Update(w engine.World) {
 			y += float64(childH)
 			// alignment
 			if ui.UIList.Align == component.CENTER {
-				render.X += float64(ui.Render.Image.Bounds().Dx())/2 - float64(childW)/2
+				render.X += dx/2 - float64(childW)/2
 			}
 			if ui.UIList.Align == component.END {
-				render.X += float64(ui.Render.Image.Bounds().Dx()) - float64(childW)
+				render.X += dx - float64(childW)
 			}
 			if ui.UIList.Justify == component.CENTER {
-				render.Y += float64(ui.Render.Image.Bounds().Dy())/2 - float64(childH)/2
+				render.Y += dy/2 - float64(childH)/2
 			}
 			if ui.UIList.Justify == component.END {
-				render.Y += float64(ui.Render.Image.Bounds().Dy()) - float64(childH)
+				render.Y += dy - float64(childH)
 			}
 		}
 	}
+	// TODO REMOVE?
+	// if ui.UIList.FitContents {
+	// 	ui.Render.Resize(totalW, totalH)
+	// }
 }
 
 type UIRenderLabel struct {
@@ -113,8 +152,6 @@ type UIRenderLabel struct {
 }
 
 func (t *UIRenderLabel) Update(world engine.World) {
-	// size := t.Render.Image.Bounds().Max
-
 	var x, y float64
 	var totalW, totalH float64
 	t.Render.Image.Clear()
@@ -139,7 +176,7 @@ func (t *UIRenderLabel) Update(world engine.World) {
 			y += lineH
 			lineW = 0
 			lineH = 0
-		} else if len(txt.Text) > 0 {
+		} else {
 			// draw text
 			for c, char := range txt.Text {
 				// draw options
@@ -147,7 +184,11 @@ func (t *UIRenderLabel) Update(world engine.World) {
 				op.GeoM.Translate(x, y)
 				op.LayoutOptions.PrimaryAlign = t.UILabel.HAlign
 				op.LayoutOptions.SecondaryAlign = t.UILabel.VAlign
-				op.ColorScale.ScaleWithColor(txt.Color)
+				color := txt.Color
+				if color == nil {
+					color = colornames.White
+				}
+				op.ColorScale.ScaleWithColor(color)
 				// draw
 				text.Draw(t.Render.Image, string(char), &ff, op)
 				// measure

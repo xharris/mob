@@ -24,6 +24,8 @@ func (r *RenderSystem) Draw(w engine.World, screen *ebiten.Image) {
 		if !render.Visible || render.Image == nil {
 			continue
 		}
+		render.DrawImageOptions.GeoM.Reset()
+		render.DrawImageOptions.GeoM.Translate(render.X, render.Y)
 		// draw rect
 		if render.Debug {
 			vector.StrokeRect(
@@ -31,10 +33,13 @@ func (r *RenderSystem) Draw(w engine.World, screen *ebiten.Image) {
 				1, 1, float32(render.Image.Bounds().Dx()-1), float32(render.Image.Bounds().Dy()-1),
 				1, colornames.Green200, false,
 			)
+			vector.StrokeLine(
+				render.Image,
+				0, 0, float32(render.Image.Bounds().Dx()), float32(render.Image.Bounds().Dy()),
+				1, colornames.Green200, false,
+			)
 		}
 		// draw to screen
-		render.DrawImageOptions.GeoM.Reset()
-		render.DrawImageOptions.GeoM.Translate(render.X, render.Y)
 		screen.DrawImage(render.Image, &render.DrawImageOptions)
 	}
 }

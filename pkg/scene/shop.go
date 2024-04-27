@@ -2,9 +2,9 @@ package scene
 
 import (
 	"fmt"
+	"log/slog"
 	"mob/pkg/allymod"
 	"mob/pkg/component"
-	"mob/pkg/font"
 	"mob/pkg/system"
 
 	"github.com/sedyh/mizu/pkg/engine"
@@ -16,16 +16,23 @@ type Shop struct {
 	AllyModCount int
 }
 
-type ShopAlly struct {
+type ShopAllyContainer struct {
 	component.Render
 	component.ShopItem
-	component.Tooltip
-	component.Rect
 	component.Clickable
 	component.UIList
+	component.Hoverable
+	component.UIChild
+}
+
+type ShopAllyRect struct {
+	component.Render
+	component.Rect
+	component.UIChild
 }
 
 type List struct {
+	component.UIChild
 	component.UIList
 	component.Render
 }
@@ -43,58 +50,132 @@ type Button struct {
 	component.UIChild
 }
 
+type UI struct {
+	component.Render
+	component.UIGrid
+}
+
+type Label struct {
+	component.Render
+	component.UILabel
+	component.UIChild
+}
+
 func (s *Shop) Setup(w engine.World) {
 	w.AddComponents(
 		component.Render{}, component.ShopItem{}, component.Tooltip{}, component.Rect{},
 		component.UIList{}, component.UILabel{}, component.UIChild{}, component.Clickable{},
+		component.UIGrid{}, component.Hoverable{},
 	)
 	w.AddSystems(
-		&system.RenderSystem{}, &system.ShopItemSytem{}, &system.TooltipSystem{},
+		&system.RenderSystem{}, &system.TooltipSystem{},
 		&system.RenderRect{}, &system.UIRenderLabel{}, &system.UIListLayout{},
-		&system.Clickable{},
+		&system.Clickable{}, &system.UIGridLayout{}, &system.Hoverable{},
 	)
 
 	if s.AllyModCount <= 0 {
 		s.AllyModCount = 3
 	}
 
-	var purchasedAllies []ShopAlly
+	var purchased []component.ShopItem
+
+	shopItemsUI := UI{
+		Render: component.NewRender(component.WRenderDebug()),
+		UIGrid: component.UIGrid{
+			ID:      "shop-items-ui",
+			Columns: min(5, s.AllyModCount),
+			Align:   component.CENTER,
+			Justify: component.CENTER,
+		},
+	}
+	w.AddEntities(&shopItemsUI)
 
 	// buyable ally mods
 	for i := range s.AllyModCount {
 		shopItemID := component.UI_ID(fmt.Sprintf("shop-item-%d", i))
-		shopitem := ShopAlly{
-			Render: component.NewRender(component.WRenderSize(16, 16)),
+		shopitem := ShopAllyContainer{
+			Render: component.NewRender(component.WRenderDebug()),
 			ShopItem: component.ShopItem{
 				AddMods: []allymod.Mod{
-					{Name: "Slash", Desc: "Swing my sword", Type: allymod.GOOD},
-					{Name: "Block", Desc: "Block an attack", Type: allymod.GOOD},
+					{Name: "Slash", Type: allymod.MeleeAttack, Target: allymod.Enemy},
+					{Name: "Block", Type: allymod.Buff, Target: allymod.Self},
+					{Name: "Sleepy", Desc: "Might take a nap", Type: allymod.Debuff, Target: allymod.Self},
 				},
 			},
-			Tooltip: component.Tooltip{
-				Parent: "shop-item-tooltip",
-			},
-			Rect: component.Rect{
-				Color: colornames.Blue500,
-			},
 			Clickable: component.Clickable{},
+			Hoverable: component.Hoverable{},
 			UIList: component.UIList{
 				ID:        shopItemID,
 				Direction: component.VERTICAL,
-				Reverse:   true,
+				Align:     component.CENTER,
+				Justify:   component.CENTER,
+			},
+			UIChild: component.UIChild{
+				Parent: "shop-items-ui",
 			},
 		}
-		shopitem.Clickable.Click = func() {
-			purchasedAllies = append(purchasedAllies, shopitem)
+		// show mods on hover
+		shopitem.Hoverable.Enter = func() {
+			label := Label{
+				Render:  component.NewRender(),
+				UILabel: component.UILabel{},
+				UIChild: component.UIChild{
+					Parent: "shop-item-tooltip",
+				},
+			}
+			for _, addMod := range shopitem.AddMods {
+				color := colornames.Green300
+				nameSuffix := "! "
+				if !addMod.IsGood() {
+					nameSuffix = "? "
+					color = colornames.Red300
+				}
+				if addMod.Type == allymod.Debuff && addMod.Target == allymod.Self {
+					nameSuffix = "... "
+					color = colornames.Orange300
+				}
+				label.Text = append(label.Text,
+					component.UILabelText{Text: addMod.Name, Color: color},
+					component.UILabelText{Text: nameSuffix, Color: color},
+					component.UILabelText{Text: addMod.Desc, Color: colornames.Grey100},
+					component.UILabelText{Newline: true},
+				)
+			}
+			w.AddEntities(&label)
 		}
+		shopitem.Hoverable.Exit = func() {
+			labels := w.View(component.UIChild{})
+			for _, e := range labels.Filter() {
+				var ch *component.UIChild
+				e.Get(&ch)
+				if ch.Parent == "shop-item-tooltip" {
+					w.RemoveEntity(e)
+				}
+			}
+		}
+		shopitem.Clickable.Click = func() {
+			purchased = append(purchased, shopitem.ShopItem)
+		}
+		w.AddEntities(&shopitem)
+		// ally image
+		allyRect := ShopAllyRect{
+			Render: component.NewRender(component.WRenderSize(32, 32)),
+			Rect: component.Rect{
+				Color: colornames.Blue500,
+			},
+			UIChild: component.UIChild{
+				Parent: shopItemID,
+			},
+		}
+		w.AddEntities(&allyRect)
 		// cost
 		if s.Free {
-			shopitem.ShopItem.Cost = 0
+			shopitem.ShopItem.Cost = i // 0
 		} else {
-			shopitem.ShopItem.Cost = 3
+			shopitem.ShopItem.Cost = i // 3
 		}
 		costLabel := ShopCostLabel{
-			Render: component.NewRender(),
+			Render: component.NewRender(component.WRenderDebug()),
 			UIChild: component.UIChild{
 				Parent: shopItemID,
 			},
@@ -104,22 +185,32 @@ func (s *Shop) Setup(w engine.World) {
 				},
 			},
 		}
-		shopitem.Tooltip.UseShopItem(shopitem.ShopItem)
-		w.AddEntities(&shopitem, &costLabel)
+		w.AddEntities(&costLabel)
 	}
+	ui := UI{
+		Render: component.NewRender(),
+		UIGrid: component.UIGrid{
+			ID:      "ui",
+			Rows:    3,
+			Columns: 3,
+		},
+	}
+	w.AddEntities(&ui)
 	// tooltip container
 	b := w.Bounds().Max
 	mainTTArea := List{
-		Render: component.NewRender(component.WRenderSize(b.X, b.Y)),
+		Render: component.NewRender(),
 		UIList: component.UIList{
 			ID:        "shop-item-tooltip",
 			Direction: component.VERTICAL,
-			Reverse:   true,
-			// Align:     component.END,
+			Justify:   component.END,
+		},
+		UIChild: component.UIChild{
+			Parent: "ui",
+			X:      0,
+			Y:      2,
 		},
 	}
-	mainTTArea.Render.X = 10
-	mainTTArea.Render.Y = -10
 	w.AddEntities(&mainTTArea)
 	// continue button
 	actions := List{
@@ -127,16 +218,21 @@ func (s *Shop) Setup(w engine.World) {
 		UIList: component.UIList{
 			ID:        "actions",
 			Direction: component.VERTICAL,
-			Reverse:   true,
 			Align:     component.END,
+			Justify:   component.END,
+		},
+		UIChild: component.UIChild{
+			Parent: "ui",
+			X:      2,
+			Y:      2,
 		},
 	}
-	fx, fy := font.DefaultFont.Measure("Continue")
 	continueButton := Button{
-		Render: component.NewRender(component.WRenderDebug()),
+		Render: component.NewRender(),
 		Clickable: component.Clickable{
 			Click: func() {
 				// go to strategy scene
+				slog.Info("go to strategy scene")
 			},
 		},
 		UILabel: component.UILabel{
@@ -146,8 +242,6 @@ func (s *Shop) Setup(w engine.World) {
 		},
 		UIChild: component.UIChild{
 			Parent: "actions",
-			W:      int(fx),
-			H:      int(fy),
 		},
 	}
 	w.AddEntities(&actions, &continueButton)
