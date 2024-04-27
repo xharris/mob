@@ -10,10 +10,11 @@ import (
 )
 
 type Font struct {
-	faceSource  *ebitext.GoTextFaceSource
-	Name        string
-	Size        float64
-	LineSpacing float64
+	faceSource    *ebitext.GoTextFaceSource
+	Name          string
+	Size          float64
+	LineSpacing   float64
+	LetterSpacing float64
 }
 
 type FontOption func(*Font)
@@ -22,7 +23,7 @@ var DefaultFont *Font
 
 func Init() {
 	var err error
-	DefaultFont, err = NewFont("asset/font/Retro Gaming.ttf", WFontSize(14))
+	DefaultFont, err = NewFont("asset/font/Retro Gaming.ttf", WFontSize(14), WFontLetterSpacing(0.75))
 	if err != nil {
 		log.Panic("could not load font", err)
 	}
@@ -60,13 +61,21 @@ func WFontLineSpacing(spacing float64) FontOption {
 	}
 }
 
+func WFontLetterSpacing(spacing float64) FontOption {
+	return func(f *Font) {
+		f.LetterSpacing = spacing
+	}
+}
+
 func (f *Font) Measure(text string) (float64, float64) {
 	if !f.Valid() {
 		slog.Warn("using an invalid font", "font", f)
 		return 0, 0
 	}
 	ff := f.Face()
-	return ebitext.Measure(text, &ff, 0)
+	x, y := ebitext.Measure(text, &ff, 0)
+	x += f.LetterSpacing
+	return x, y
 }
 
 func (f *Font) Face() ebitext.GoTextFace {

@@ -3,8 +3,7 @@ package allymod
 type ModType int
 
 const (
-	MeleeAttack ModType = iota
-	RangedAttack
+	Attack ModType = iota
 	Buff
 	Debuff
 )
@@ -22,11 +21,12 @@ type Mod struct {
 	Desc   string
 	Type   ModType
 	Target ModTarget
+	Range  float64
 }
 
 func (m *Mod) IsGood() bool {
 	switch m.Type {
-	case MeleeAttack, RangedAttack, Debuff:
+	case Attack, Debuff:
 		return m.Target == Enemy
 	case Buff:
 		return m.Target == Ally

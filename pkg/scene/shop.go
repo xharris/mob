@@ -63,12 +63,12 @@ type Label struct {
 
 func (s *Shop) Setup(w engine.World) {
 	w.AddComponents(
-		component.Render{}, component.ShopItem{}, component.Tooltip{}, component.Rect{},
+		component.Render{}, component.ShopItem{}, component.Rect{},
 		component.UIList{}, component.UILabel{}, component.UIChild{}, component.Clickable{},
 		component.UIGrid{}, component.Hoverable{},
 	)
 	w.AddSystems(
-		&system.RenderSystem{}, &system.TooltipSystem{},
+		&system.RenderSystem{},
 		&system.RenderRect{}, &system.UIRenderLabel{}, &system.UIListLayout{},
 		&system.Clickable{}, &system.UIGridLayout{}, &system.Hoverable{},
 	)
@@ -97,7 +97,7 @@ func (s *Shop) Setup(w engine.World) {
 			Render: component.NewRender(component.WRenderDebug()),
 			ShopItem: component.ShopItem{
 				AddMods: []allymod.Mod{
-					{Name: "Slash", Type: allymod.MeleeAttack, Target: allymod.Enemy},
+					{Name: "Slash", Type: allymod.Attack, Target: allymod.Enemy},
 					{Name: "Block", Type: allymod.Buff, Target: allymod.Self},
 					{Name: "Sleepy", Desc: "Might take a nap", Type: allymod.Debuff, Target: allymod.Self},
 				},
@@ -108,35 +108,38 @@ func (s *Shop) Setup(w engine.World) {
 				ID:        shopItemID,
 				Direction: component.VERTICAL,
 				Align:     component.CENTER,
-				Justify:   component.CENTER,
+				// Justify:     component.CENTER,
+				FitContents: true,
 			},
 			UIChild: component.UIChild{
 				Parent: "shop-items-ui",
 			},
 		}
 		// show mods on hover
+		shoptItemTooltipID := component.UI_ID(fmt.Sprintf("shop-item-tooltip-%d", i))
 		shopitem.Hoverable.Enter = func() {
 			label := Label{
 				Render:  component.NewRender(),
 				UILabel: component.UILabel{},
 				UIChild: component.UIChild{
+					ID:     shoptItemTooltipID,
 					Parent: "shop-item-tooltip",
 				},
 			}
 			for _, addMod := range shopitem.AddMods {
 				color := colornames.Green300
-				nameSuffix := "! "
+				nameSuffix := "!"
 				if !addMod.IsGood() {
-					nameSuffix = "? "
+					nameSuffix = "?"
 					color = colornames.Red300
 				}
 				if addMod.Type == allymod.Debuff && addMod.Target == allymod.Self {
-					nameSuffix = "... "
+					nameSuffix = "..."
 					color = colornames.Orange300
 				}
 				label.Text = append(label.Text,
 					component.UILabelText{Text: addMod.Name, Color: color},
-					component.UILabelText{Text: nameSuffix, Color: color},
+					component.UILabelText{Text: nameSuffix + " ", Color: color},
 					component.UILabelText{Text: addMod.Desc, Color: colornames.Grey100},
 					component.UILabelText{Newline: true},
 				)
@@ -148,7 +151,7 @@ func (s *Shop) Setup(w engine.World) {
 			for _, e := range labels.Filter() {
 				var ch *component.UIChild
 				e.Get(&ch)
-				if ch.Parent == "shop-item-tooltip" {
+				if ch.ID == shoptItemTooltipID {
 					w.RemoveEntity(e)
 				}
 			}
@@ -175,7 +178,7 @@ func (s *Shop) Setup(w engine.World) {
 			shopitem.ShopItem.Cost = i // 3
 		}
 		costLabel := ShopCostLabel{
-			Render: component.NewRender(component.WRenderDebug()),
+			Render: component.NewRender(),
 			UIChild: component.UIChild{
 				Parent: shopItemID,
 			},

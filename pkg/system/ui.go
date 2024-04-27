@@ -49,13 +49,13 @@ func (ui *UIGridLayout) Update(w engine.World) {
 		var render *component.Render
 		var list *component.UIList
 		e.Get(&child, &render, &list)
-		if list != nil {
+		if list != nil && !list.FitContents {
 			render.Resize(int(cellW), int(cellH))
 		}
 		x, y := child.X, child.Y
 		if autoArrange {
-			x = int(i / columns)
-			y = int(i % columns)
+			x = int(i % columns)
+			y = int(i / columns)
 		}
 		render.X = ui.Render.X + float64(x)*cellW
 		render.Y = ui.Render.Y + float64(y)*cellH
@@ -140,10 +140,10 @@ func (ui *UIListLayout) Update(w engine.World) {
 			}
 		}
 	}
-	// TODO REMOVE?
-	// if ui.UIList.FitContents {
-	// 	ui.Render.Resize(totalW, totalH)
-	// }
+	// resize to fit contents
+	if ui.UIList.FitContents {
+		ui.Render.Resize(totalW, totalH)
+	}
 }
 
 type UIRenderLabel struct {
