@@ -22,6 +22,7 @@ type RoomChoice struct {
 	component.UILabel
 	component.Clickable
 	component.Hoverable
+	component.Room
 }
 
 type PickRoom struct {
@@ -50,16 +51,16 @@ func (c *PickRoom) Setup(w engine.World) {
 		for y := range 3 {
 			nx, ny := (x-1)+lvlX, (y-1)+lvlY
 			slog.Info("room", "x", x, "y", y, "nx", nx, "ny", ny)
-			if ((x-1) == 0 && (y-1) == 0) || (x == y) || nx < 0 || ny < 0 || nx >= c.State.Level.W || ny >= c.State.Level.H {
+			if (x == y) || (nx == ny) || c.State.Level.IsOutsideBounds(nx, ny) {
 				continue
 			}
-			room := c.State.Level.Rooms[nx][ny]
+			room := c.State.Level.Rooms[ny][nx]
 			slog.Info("good", "room", lang.Get(fmt.Sprintf("room%d", room.Type)))
 			roomChoice := RoomChoice{
 				UIChild: component.UIChild{
 					Parent: "pick-grid",
-					X:      y,
-					Y:      x,
+					X:      x,
+					Y:      y,
 				},
 				UILabel: component.UILabel{
 					Text: []component.UILabelText{
@@ -69,10 +70,22 @@ func (c *PickRoom) Setup(w engine.World) {
 				Render: component.NewRender(),
 				Clickable: component.Clickable{
 					Click: func(e engine.Entity) {
-						// go to room
+						// TODO go to room
+						var cRoom *component.Room
+						e.Get(&cRoom)
+						switch cRoom.Type {
+						case component.Fight:
+							w.ChangeScene(&Fight{
+								Scene: c.Scene,
+								Room:  *cRoom,
+							})
+						default:
+							slog.Warn("room not implemented yet", "type", lang.Get(fmt.Sprintf("room%d", cRoom.Type)))
+						}
 					},
 				},
 				Hoverable: component.Hoverable{},
+				Room:      room,
 			}
 			w.AddEntities(&roomChoice)
 		}

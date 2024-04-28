@@ -9,8 +9,7 @@ import (
 
 type Setup struct {
 	Scene
-	NewGame   bool
-	NextLevel bool
+	NewGame bool
 }
 
 func (s *Setup) Setup(w engine.World) {
@@ -30,8 +29,13 @@ func (s *Setup) Setup(w engine.World) {
 		w.ChangeScene(shop)
 		return
 	}
-	// move to next level
-	if s.NextLevel {
+	fx, fy, finishFound := s.State.Level.GetFinish()
+	if !finishFound {
+		slog.Warn("level does not have end")
+		// TODO go to title screen
+	}
+	// finished level, move to next one
+	if s.State.LevelX == fx && s.State.LevelY == fy {
 		s.State.Level.Level++
 		s.Scene.State.Level, s.Scene.State.LevelX, s.Scene.State.LevelY = level.Generate(s.State.Level.Level)
 	}

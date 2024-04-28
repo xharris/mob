@@ -2,6 +2,7 @@ package level
 
 import (
 	"fmt"
+	"log/slog"
 	"math/rand"
 	"mob/pkg/component"
 	"mob/pkg/mod"
@@ -9,60 +10,27 @@ import (
 
 type Level struct {
 	W, H  int
-	Rooms [][]Room
+	Rooms [][]component.Room
 	Level int
 }
 
-type RoomType int
-
-const (
-	Empty RoomType = iota
-	Start
-	// move to next level
-	Finish
-	Fight
-	// heal all allies
-	Rest
-	// free training for random % of allies
-	Library
-	// buy mods
-	Shop
-	// hire allies
-	Recruit
-	// fire an ally to pass or lose hp/gold
-	Fire
-	// fire a random ally to pass or lose hp/gold
-	FireRandom
-)
-
-var goodRoomTypes []RoomType = []RoomType{Rest, Library, Shop, Recruit}
-
-type Room struct {
-	Enemies []component.Enemy
-	// appears as 'unknown' to player
-	Unknown   bool
-	Completed bool
-	Type      RoomType
-}
-
-func (r *RoomType) IsGood() bool {
-	if *r == Start {
-		return true
-	}
-	for _, t := range goodRoomTypes {
-		if t == *r {
-			return true
+func (l *Level) GetFinish() (int, int, bool) {
+	for lx := range l.W {
+		for ly := range l.H {
+			if l.Rooms[lx][ly].Type == component.Finish {
+				return lx, ly, true
+			}
 		}
 	}
-	return false
+	return -1, -1, false
 }
 
 func (l *Level) generateRoom(x, y int) {
 	// generate room
-	if l.Rooms[x][y].Type == Empty {
+	if l.Rooms[y][x].Type == component.Empty {
 		// TODO make it random
-		room := Room{
-			Type:    Fight,
+		room := component.Room{
+			Type:    component.Fight,
 			Enemies: []component.Enemy{},
 		}
 		for range rand.Intn(l.Level+2) + 1 {
@@ -74,13 +42,14 @@ func (l *Level) generateRoom(x, y int) {
 			}
 			room.Enemies = append(room.Enemies, enemy)
 		}
-		l.Rooms[x][y] = room
+		l.Rooms[y][x] = room
 	}
 	// generate neighbors
 	for nx := x - 1; nx <= x+1; nx += 1 {
 		for ny := y - 1; ny <= y+1; ny += 1 {
 			// within bounds?
-			if nx >= 0 && ny >= 0 && nx < len(l.Rooms) && ny < len(l.Rooms[nx]) && l.Rooms[nx][ny].Type == Empty {
+			neighbor := l.GetRoom(nx, ny)
+			if neighbor != nil && neighbor.Type == component.Empty {
 				l.generateRoom(nx, ny)
 			}
 		}
@@ -111,27 +80,54 @@ func Generate(level int) (l Level, startX, startY int) {
 		finishY = cornerY[1]
 	}
 	// fill rooms array and set starting room
-	l.Rooms = make([][]Room, l.W)
-	for x := range l.W {
-		l.Rooms[x] = make([]Room, l.H)
-		for y := range l.H {
-			room := Room{Type: Empty}
+	l.Rooms = make([][]component.Room, l.H)
+	for y := range l.H {
+		l.Rooms[y] = make([]component.Room, l.W)
+		for x := range l.W {
+			room := component.Room{X: y, Y: x, Type: component.Empty}
 			if x == startX && y == startY {
-				room.Type = Start
+				room.Type = component.Start
 			}
 			if x == finishX && y == finishY {
-				room.Type = Finish
+				room.Type = component.Finish
 			}
-			l.Rooms[x][y] = room
+			l.Rooms[y][x] = room
 		}
 	}
 	// flood fill random room types from start
 	l.generateRoom(startX, startY)
-	for x := range l.W {
-		for y := range l.H {
-			fmt.Print(l.Rooms[x][y].Type)
+	slog.Info("generated level", "w", l.W, "h", l.H)
+
+	for y := range l.H {
+		for x := range l.W {
+			room := l.GetRoom(x, y)
+			if room == nil {
+				fmt.Print(' ')
+			} else {
+				fmt.Print(room.Type)
+			}
 		}
 		fmt.Println()
+	}
+	return
+}
+
+func (l *Level) IsOutsideBounds(x, y int) bool {
+	return x < 0 || y < 0 || y >= l.H || x >= l.W
+}
+
+func (l *Level) GetRoom(x, y int) *component.Room {
+	if !l.IsOutsideBounds(x, y) {
+		return &l.Rooms[y][x]
+	}
+	return nil
+}
+
+func (l *Level) IterRooms() (rooms []*component.Room) {
+	for y := range l.H {
+		for x := range l.W {
+			rooms = append(rooms, &l.Rooms[y][x])
+		}
 	}
 	return
 }

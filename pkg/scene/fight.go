@@ -10,6 +10,7 @@ import (
 
 type Fight struct {
 	Scene
+	Room component.Room
 }
 
 func (f *Fight) Setup(w engine.World) {

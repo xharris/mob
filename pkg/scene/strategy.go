@@ -18,9 +18,10 @@ func (s *Strategy) Setup(w engine.World) {
 	component.AddComponents(w)
 	system.AddSystems(w)
 
-	// list allies
+	// list allies (click to change priority, view mods, etc)
+	// for _, ally := range s.State.Allies {
 
-	// ui: ally settings
+	// }
 
 	// continue button
 	actions := List{
