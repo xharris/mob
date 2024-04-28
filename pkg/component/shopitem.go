@@ -1,13 +1,13 @@
 package component
 
 import (
-	"mob/pkg/allymod"
+	"mob/pkg/mod"
 )
 
 type ShopItem struct {
-	AddMods     []allymod.Mod
-	RemoveMods  []allymod.Mod
-	UpgradeMods []allymod.Mod
+	AddMods     []mod.Mod
+	RemoveMods  []mod.Mod
+	UpgradeMods []mod.Mod
 	Cost        int
 	Name        string
 	Purchased   bool

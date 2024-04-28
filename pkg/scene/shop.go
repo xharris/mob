@@ -2,9 +2,10 @@ package scene
 
 import (
 	"fmt"
-	"mob/pkg/allymod"
+	"log/slog"
 	"mob/pkg/component"
-	"mob/pkg/game"
+	"mob/pkg/entity"
+	"mob/pkg/mod"
 	"mob/pkg/system"
 
 	"github.com/sedyh/mizu/pkg/engine"
@@ -60,33 +61,27 @@ type Label struct {
 type Shop struct {
 	Scene
 	Free           bool
-	AllyModCount   int
+	ModCount       int
 	MustBuyOne     bool
 	continueShown  bool
 	purchasedCount int
+	PurchaseLimit  int
 }
 
 func (s *Shop) Setup(w engine.World) {
-	w.AddComponents(
-		component.Render{}, component.ShopItem{}, component.Rect{}, component.Health{},
-		component.UIList{}, component.UILabel{}, component.UIChild{}, component.Clickable{},
-		component.UIGrid{}, component.Hoverable{},
-	)
-	w.AddSystems(
-		&system.RenderSystem{}, &system.ShopItem{},
-		&system.RenderRect{}, &system.UIRenderLabel{}, &system.UIListLayout{},
-		&system.Clickable{}, &system.UIGridLayout{}, &system.Hoverable{},
-	)
+	slog.Info("shop")
+	component.AddComponents(w)
+	system.AddSystems(w)
 
-	if s.AllyModCount <= 0 {
-		s.AllyModCount = 3
+	if s.ModCount <= 0 {
+		s.ModCount = 3
 	}
 
 	shopItemsUI := UI{
 		Render: component.NewRender(),
 		UIGrid: component.UIGrid{
 			ID:      "shop-items-ui",
-			Columns: min(5, s.AllyModCount),
+			Columns: min(5, s.ModCount),
 			Align:   component.CENTER,
 			Justify: component.CENTER,
 		},
@@ -94,16 +89,16 @@ func (s *Shop) Setup(w engine.World) {
 	w.AddEntities(&shopItemsUI)
 
 	// buyable ally mods
-	for i := range s.AllyModCount {
+	for i := range s.ModCount {
 		shoptItemTooltipID := component.UI_ID(fmt.Sprintf("shop-item-tooltip-%d", i))
 		shopItemID := component.UI_ID(fmt.Sprintf("shop-item-%d", i))
 		shopitem := ShopAllyContainer{
 			Render: component.NewRender(),
 			ShopItem: component.ShopItem{
-				AddMods: []allymod.Mod{
-					{Name: "Slash", Type: allymod.Attack, Target: allymod.Enemy},
-					{Name: "Block", Type: allymod.Buff, Target: allymod.Self},
-					{Name: "Sleepy", Desc: "Might take a nap", Type: allymod.Debuff, Target: allymod.Self},
+				AddMods: []mod.Mod{
+					{Name: "Slash", Type: mod.Attack, Target: mod.Enemy},
+					{Name: "Block", Type: mod.Buff, Target: mod.Self},
+					{Name: "Sleepy", Desc: "Might take a nap", Type: mod.Debuff, Target: mod.Self},
 				},
 				Name: "Sir Bobbington",
 			},
@@ -113,10 +108,49 @@ func (s *Shop) Setup(w engine.World) {
 			},
 			Clickable: component.Clickable{
 				Click: func(e engine.Entity) {
-					var shopItem *component.ShopItem
+					var item *component.ShopItem
 					var health *component.Health
-					e.Get(&shopItem, &health)
-					s.purchaseAlly(w, shopItem, health)
+					e.Get(&item, &health)
+
+					reachedPurchaseLimit := s.PurchaseLimit > 0 && s.purchasedCount >= s.PurchaseLimit
+					if item.Purchased || reachedPurchaseLimit {
+						return
+					}
+
+					var foundAlly *entity.Ally
+					for _, a := range s.Scene.State.Allies {
+						if a.Name == item.Name {
+							foundAlly = &a
+							break
+						}
+					}
+					if foundAlly == nil {
+						// add new ally
+						ally := entity.Ally{
+							Ally: component.Ally{
+								Mods: item.AddMods,
+							},
+							Health: *health,
+						}
+						s.Scene.State.Allies = append(s.Scene.State.Allies, ally)
+					} else {
+						// change existing ally
+						// mods
+						for _, mod := range item.AddMods {
+							foundAlly.AddMod(mod)
+						}
+						for _, mod := range item.RemoveMods {
+							foundAlly.RemoveMod(mod)
+						}
+						// health
+						foundAlly.Health = *health
+					}
+					item.Purchased = true
+					s.purchasedCount++
+
+					if s.purchasedCount > 0 || !s.MustBuyOne {
+						s.showContinueButton(w)
+					}
 				},
 			},
 			// show mods on hover
@@ -144,7 +178,7 @@ func (s *Shop) Setup(w engine.World) {
 							nameSuffix = "?"
 							color = colornames.Red300
 						}
-						if addMod.Type == allymod.Debuff && addMod.Target == allymod.Self {
+						if addMod.Type == mod.Debuff && addMod.Target == mod.Self {
 							nameSuffix = "..."
 							color = colornames.Orange300
 						}
@@ -248,45 +282,11 @@ func (s *Shop) Setup(w engine.World) {
 			Y:      2,
 		},
 	}
-	if s.purchasedCount > 0 || !s.MustBuyOne {
-		s.showContinueButton(w)
-	}
 	w.AddEntities(&actions)
-}
 
-func (s *Shop) purchaseAlly(w engine.World, item *component.ShopItem, health *component.Health) {
-	if s.purchasedCount > 0 || !s.MustBuyOne {
+	if !s.MustBuyOne {
 		s.showContinueButton(w)
 	}
-	var foundAlly *game.Ally
-	for _, a := range s.Scene.State.Allies {
-		if a.Name == item.Name {
-			foundAlly = &a
-			break
-		}
-	}
-	if foundAlly == nil {
-		// add new ally
-		ally := game.Ally{
-			Ally: component.Ally{
-				Mods: item.AddMods,
-			},
-			Health: *health,
-		}
-		s.Scene.State.Allies = append(s.Scene.State.Allies, ally)
-	} else {
-		// change existing ally
-		// mods
-		for _, mod := range item.AddMods {
-			foundAlly.AddMod(mod)
-		}
-		for _, mod := range item.RemoveMods {
-			foundAlly.RemoveMod(mod)
-		}
-		// health
-		foundAlly.Health = *health
-	}
-	item.Purchased = true
 }
 
 func (s *Shop) showContinueButton(w engine.World) {
@@ -297,10 +297,8 @@ func (s *Shop) showContinueButton(w engine.World) {
 		Render: component.NewRender(),
 		Clickable: component.Clickable{
 			Click: func(engine.Entity) {
-				// go to strategy scene
-				w.ChangeScene(&Strategy{
-					Scene: s.Scene,
-				})
+				// pick the next room
+				w.ChangeScene(&PickRoom{Scene: s.Scene})
 			},
 		},
 		UILabel: component.UILabel{

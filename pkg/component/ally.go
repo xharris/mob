@@ -1,17 +1,17 @@
 package component
 
-import "mob/pkg/allymod"
+import "mob/pkg/mod"
 
 type Ally struct {
-	Mods []allymod.Mod
+	Mods []mod.Mod
 	Name string
 }
 
-func (a *Ally) AddMod(mod allymod.Mod) {
-	var mods []allymod.Mod
+func (a *Ally) AddMod(m mod.Mod) {
+	var mods []mod.Mod
 	for _, am := range a.Mods {
-		if am.Name == mod.Name {
-			mods = append(mods, mod)
+		if am.Name == m.Name {
+			mods = append(mods, m)
 		} else {
 			mods = append(mods, am)
 		}
@@ -19,11 +19,11 @@ func (a *Ally) AddMod(mod allymod.Mod) {
 	a.Mods = mods
 }
 
-func (a *Ally) RemoveMod(mod allymod.Mod) {
-	var mods []allymod.Mod
+func (a *Ally) RemoveMod(m mod.Mod) {
+	var mods []mod.Mod
 	for _, am := range a.Mods {
-		if am.Name != mod.Name {
-			mods = append(mods, mod)
+		if am.Name != m.Name {
+			mods = append(mods, m)
 		}
 	}
 	a.Mods = mods

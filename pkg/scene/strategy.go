@@ -1,6 +1,7 @@
 package scene
 
 import (
+	"log/slog"
 	"mob/pkg/component"
 	"mob/pkg/system"
 
@@ -13,14 +14,9 @@ type Strategy struct {
 }
 
 func (s *Strategy) Setup(w engine.World) {
-	w.AddComponents(
-		component.Render{}, component.UIList{}, component.UIChild{},
-	)
-	w.AddEntities(
-		&system.UIListLayout{},
-	)
-
-	// generate enemies
+	slog.Info("strategy")
+	component.AddComponents(w)
+	system.AddSystems(w)
 
 	// list allies
 

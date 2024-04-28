@@ -6,7 +6,8 @@ Setup > Strategy > Fight > Shop > Strategy > ...
 
 ### Setup
 
-- First room only
+- Generate level
+- If on level 1
     - Get a free ally
     - Skip shop
 

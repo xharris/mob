@@ -1,0 +1,14 @@
+{
+    "hello_world": "Hello World",
+    "room0": "Empty",
+    "room1": "Entrance",
+    "room2": "Exit",
+    "room3": "Fight",
+    "room4": "Rest",
+    "room5": "Library",
+    "room6": "Shop",
+    "room7": "Recruit",
+    "room8": "A Tough Decision",
+    "room9": "A Really Tough Decision",
+    "unknown": "Unknown"
+}

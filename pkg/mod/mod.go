@@ -1,4 +1,4 @@
-package allymod
+package mod
 
 type ModType int
 

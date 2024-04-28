@@ -10,6 +10,8 @@ github.com/hajimehoshi/ebiten/v2 v2.7.2 h1:5HcWAjxhGMBocJh0jH/61Kx4QJ91HkzYtSeSu
 github.com/hajimehoshi/ebiten/v2 v2.7.2/go.mod h1:1vjyPw+h3n30rfTOpIsbWRXSxZ0Oz1cYc6Tq/2DKoQg=
 github.com/jezek/xgb v1.1.1 h1:bE/r8ZZtSv7l9gk6nU0mYx51aXrvnyb44892TwSaqS4=
 github.com/jezek/xgb v1.1.1/go.mod h1:nrhwO0FX/enq75I7Y7G8iN1ubpSGZEiA3v9e9GyRFlk=
+github.com/nicksnyder/go-i18n/v2 v2.4.0 h1:3IcvPOAvnCKwNm0TB0dLDTuawWEj+ax/RERNC+diLMM=
+github.com/nicksnyder/go-i18n/v2 v2.4.0/go.mod h1:nxYSZE9M0bf3Y70gPQjN9ha7XNHX7gMc814+6wVyEI4=
 github.com/sedyh/mizu v1.0.4 h1:cD0yGMqQd5qsseHoUHgxMCan57SvS5olGujTZfOCQqA=
 github.com/sedyh/mizu v1.0.4/go.mod h1:/8dPXzGnafYlpnCDCi8QiZOyGZD8cIynw7ERNmc/wEE=
 golang.org/x/exp/shiny v0.0.0-20240416160154-fe59bbe5cc7f h1:W11kcexeK9nBV2PQVuWu7jFf0rIyI9jb+5AH1IxP7Xc=

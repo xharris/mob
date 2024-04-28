@@ -1,14 +1,19 @@
 package game
 
 import (
-	"mob/pkg/component"
+	"mob/pkg/entity"
+	"mob/pkg/level"
 )
 
-type Ally struct {
-	component.Health
-	component.Ally
+type State struct {
+	Allies         []entity.Ally
+	Level          level.Level
+	LevelX, LevelY int
 }
 
-type State struct {
-	Allies []Ally
+func NewState() (s State) {
+	s.Level = level.Level{
+		Level: 1,
+	}
+	return
 }
