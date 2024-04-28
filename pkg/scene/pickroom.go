@@ -50,12 +50,10 @@ func (c *PickRoom) Setup(w engine.World) {
 	for x := range 3 {
 		for y := range 3 {
 			nx, ny := (x-1)+lvlX, (y-1)+lvlY
-			slog.Info("room", "x", x, "y", y, "nx", nx, "ny", ny)
-			if (x == y) || (nx == ny) || c.State.Level.IsOutsideBounds(nx, ny) {
+			room := c.State.Level.GetRoom(nx, ny)
+			if (x-1 != 0 && y-1 != 0) || (x-1 == 0 && y-1 == 0) || room == nil {
 				continue
 			}
-			room := c.State.Level.Rooms[ny][nx]
-			slog.Info("good", "room", lang.Get(fmt.Sprintf("room%d", room.Type)))
 			roomChoice := RoomChoice{
 				UIChild: component.UIChild{
 					Parent: "pick-grid",
@@ -85,7 +83,7 @@ func (c *PickRoom) Setup(w engine.World) {
 					},
 				},
 				Hoverable: component.Hoverable{},
-				Room:      room,
+				Room:      *room,
 			}
 			w.AddEntities(&roomChoice)
 		}
