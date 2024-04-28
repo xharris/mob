@@ -2,19 +2,14 @@ package scene
 
 import (
 	"fmt"
-	"log/slog"
 	"mob/pkg/allymod"
 	"mob/pkg/component"
+	"mob/pkg/game"
 	"mob/pkg/system"
 
 	"github.com/sedyh/mizu/pkg/engine"
 	"golang.org/x/exp/shiny/materialdesign/colornames"
 )
-
-type Shop struct {
-	Free         bool
-	AllyModCount int
-}
 
 type ShopAllyContainer struct {
 	component.Render
@@ -23,6 +18,7 @@ type ShopAllyContainer struct {
 	component.UIList
 	component.Hoverable
 	component.UIChild
+	component.Health
 }
 
 type ShopAllyRect struct {
@@ -61,14 +57,23 @@ type Label struct {
 	component.UIChild
 }
 
+type Shop struct {
+	Scene
+	Free           bool
+	AllyModCount   int
+	MustBuyOne     bool
+	continueShown  bool
+	purchasedCount int
+}
+
 func (s *Shop) Setup(w engine.World) {
 	w.AddComponents(
-		component.Render{}, component.ShopItem{}, component.Rect{},
+		component.Render{}, component.ShopItem{}, component.Rect{}, component.Health{},
 		component.UIList{}, component.UILabel{}, component.UIChild{}, component.Clickable{},
 		component.UIGrid{}, component.Hoverable{},
 	)
 	w.AddSystems(
-		&system.RenderSystem{},
+		&system.RenderSystem{}, &system.ShopItem{},
 		&system.RenderRect{}, &system.UIRenderLabel{}, &system.UIListLayout{},
 		&system.Clickable{}, &system.UIGridLayout{}, &system.Hoverable{},
 	)
@@ -77,10 +82,8 @@ func (s *Shop) Setup(w engine.World) {
 		s.AllyModCount = 3
 	}
 
-	var purchased []component.ShopItem
-
 	shopItemsUI := UI{
-		Render: component.NewRender(component.WRenderDebug()),
+		Render: component.NewRender(),
 		UIGrid: component.UIGrid{
 			ID:      "shop-items-ui",
 			Columns: min(5, s.AllyModCount),
@@ -92,72 +95,88 @@ func (s *Shop) Setup(w engine.World) {
 
 	// buyable ally mods
 	for i := range s.AllyModCount {
+		shoptItemTooltipID := component.UI_ID(fmt.Sprintf("shop-item-tooltip-%d", i))
 		shopItemID := component.UI_ID(fmt.Sprintf("shop-item-%d", i))
 		shopitem := ShopAllyContainer{
-			Render: component.NewRender(component.WRenderDebug()),
+			Render: component.NewRender(),
 			ShopItem: component.ShopItem{
 				AddMods: []allymod.Mod{
 					{Name: "Slash", Type: allymod.Attack, Target: allymod.Enemy},
 					{Name: "Block", Type: allymod.Buff, Target: allymod.Self},
 					{Name: "Sleepy", Desc: "Might take a nap", Type: allymod.Debuff, Target: allymod.Self},
 				},
+				Name: "Sir Bobbington",
 			},
-			Clickable: component.Clickable{},
-			Hoverable: component.Hoverable{},
+			Health: component.Health{
+				Total:     100,
+				Remaining: 100,
+			},
+			Clickable: component.Clickable{
+				Click: func(e engine.Entity) {
+					var shopItem *component.ShopItem
+					var health *component.Health
+					e.Get(&shopItem, &health)
+					s.purchaseAlly(w, shopItem, health)
+				},
+			},
+			// show mods on hover
+			Hoverable: component.Hoverable{
+				Enter: func(e engine.Entity) {
+					var shopItemH *component.ShopItem
+					e.Get(&shopItemH)
+					label := Label{
+						Render: component.NewRender(),
+						UILabel: component.UILabel{
+							Text: []component.UILabelText{
+								{Text: shopItemH.Name, Color: colornames.BlueGrey300},
+								{Newline: true},
+							},
+						},
+						UIChild: component.UIChild{
+							ID:     shoptItemTooltipID,
+							Parent: "shop-item-tooltip",
+						},
+					}
+					for _, addMod := range shopItemH.AddMods {
+						color := colornames.Green300
+						nameSuffix := "!"
+						if !addMod.IsGood() {
+							nameSuffix = "?"
+							color = colornames.Red300
+						}
+						if addMod.Type == allymod.Debuff && addMod.Target == allymod.Self {
+							nameSuffix = "..."
+							color = colornames.Orange300
+						}
+						label.Text = append(label.Text,
+							component.UILabelText{Text: addMod.Name, Color: color},
+							component.UILabelText{Text: nameSuffix + " ", Color: color},
+							component.UILabelText{Text: addMod.Desc, Color: colornames.Grey100},
+							component.UILabelText{Newline: true},
+						)
+					}
+					w.AddEntities(&label)
+				},
+				Exit: func(engine.Entity) {
+					labels := w.View(component.UIChild{})
+					for _, e := range labels.Filter() {
+						var ch *component.UIChild
+						e.Get(&ch)
+						if ch.ID == shoptItemTooltipID {
+							w.RemoveEntity(e)
+						}
+					}
+				},
+			},
 			UIList: component.UIList{
-				ID:        shopItemID,
-				Direction: component.VERTICAL,
-				Align:     component.CENTER,
-				// Justify:     component.CENTER,
+				ID:          shopItemID,
+				Direction:   component.VERTICAL,
+				Align:       component.CENTER,
 				FitContents: true,
 			},
 			UIChild: component.UIChild{
 				Parent: "shop-items-ui",
 			},
-		}
-		// show mods on hover
-		shoptItemTooltipID := component.UI_ID(fmt.Sprintf("shop-item-tooltip-%d", i))
-		shopitem.Hoverable.Enter = func() {
-			label := Label{
-				Render:  component.NewRender(),
-				UILabel: component.UILabel{},
-				UIChild: component.UIChild{
-					ID:     shoptItemTooltipID,
-					Parent: "shop-item-tooltip",
-				},
-			}
-			for _, addMod := range shopitem.AddMods {
-				color := colornames.Green300
-				nameSuffix := "!"
-				if !addMod.IsGood() {
-					nameSuffix = "?"
-					color = colornames.Red300
-				}
-				if addMod.Type == allymod.Debuff && addMod.Target == allymod.Self {
-					nameSuffix = "..."
-					color = colornames.Orange300
-				}
-				label.Text = append(label.Text,
-					component.UILabelText{Text: addMod.Name, Color: color},
-					component.UILabelText{Text: nameSuffix + " ", Color: color},
-					component.UILabelText{Text: addMod.Desc, Color: colornames.Grey100},
-					component.UILabelText{Newline: true},
-				)
-			}
-			w.AddEntities(&label)
-		}
-		shopitem.Hoverable.Exit = func() {
-			labels := w.View(component.UIChild{})
-			for _, e := range labels.Filter() {
-				var ch *component.UIChild
-				e.Get(&ch)
-				if ch.ID == shoptItemTooltipID {
-					w.RemoveEntity(e)
-				}
-			}
-		}
-		shopitem.Clickable.Click = func() {
-			purchased = append(purchased, shopitem.ShopItem)
 		}
 		w.AddEntities(&shopitem)
 		// ally image
@@ -173,9 +192,9 @@ func (s *Shop) Setup(w engine.World) {
 		w.AddEntities(&allyRect)
 		// cost
 		if s.Free {
-			shopitem.ShopItem.Cost = i // 0
+			shopitem.ShopItem.Cost = 0
 		} else {
-			shopitem.ShopItem.Cost = i // 3
+			shopitem.ShopItem.Cost = 3
 		}
 		costLabel := ShopCostLabel{
 			Render: component.NewRender(),
@@ -200,7 +219,6 @@ func (s *Shop) Setup(w engine.World) {
 	}
 	w.AddEntities(&ui)
 	// tooltip container
-	b := w.Bounds().Max
 	mainTTArea := List{
 		Render: component.NewRender(),
 		UIList: component.UIList{
@@ -217,7 +235,7 @@ func (s *Shop) Setup(w engine.World) {
 	w.AddEntities(&mainTTArea)
 	// continue button
 	actions := List{
-		Render: component.NewRender(component.WRenderSize(b.X, b.Y)),
+		Render: component.NewRender(),
 		UIList: component.UIList{
 			ID:        "actions",
 			Direction: component.VERTICAL,
@@ -230,12 +248,59 @@ func (s *Shop) Setup(w engine.World) {
 			Y:      2,
 		},
 	}
+	if s.purchasedCount > 0 || !s.MustBuyOne {
+		s.showContinueButton(w)
+	}
+	w.AddEntities(&actions)
+}
+
+func (s *Shop) purchaseAlly(w engine.World, item *component.ShopItem, health *component.Health) {
+	if s.purchasedCount > 0 || !s.MustBuyOne {
+		s.showContinueButton(w)
+	}
+	var foundAlly *game.Ally
+	for _, a := range s.Scene.State.Allies {
+		if a.Name == item.Name {
+			foundAlly = &a
+			break
+		}
+	}
+	if foundAlly == nil {
+		// add new ally
+		ally := game.Ally{
+			Ally: component.Ally{
+				Mods: item.AddMods,
+			},
+			Health: *health,
+		}
+		s.Scene.State.Allies = append(s.Scene.State.Allies, ally)
+	} else {
+		// change existing ally
+		// mods
+		for _, mod := range item.AddMods {
+			foundAlly.AddMod(mod)
+		}
+		for _, mod := range item.RemoveMods {
+			foundAlly.RemoveMod(mod)
+		}
+		// health
+		foundAlly.Health = *health
+	}
+	item.Purchased = true
+}
+
+func (s *Shop) showContinueButton(w engine.World) {
+	if s.continueShown {
+		return
+	}
 	continueButton := Button{
 		Render: component.NewRender(),
 		Clickable: component.Clickable{
-			Click: func() {
+			Click: func(engine.Entity) {
 				// go to strategy scene
-				slog.Info("go to strategy scene")
+				w.ChangeScene(&Strategy{
+					Scene: s.Scene,
+				})
 			},
 		},
 		UILabel: component.UILabel{
@@ -247,5 +312,6 @@ func (s *Shop) Setup(w engine.World) {
 			Parent: "actions",
 		},
 	}
-	w.AddEntities(&actions, &continueButton)
+	w.AddEntities(&continueButton)
+	s.continueShown = true
 }

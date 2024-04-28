@@ -1,5 +1,8 @@
 package component
 
+import "github.com/sedyh/mizu/pkg/engine"
+
 type Clickable struct {
-	Click func()
+	Click    func(e engine.Entity)
+	Disabled bool
 }

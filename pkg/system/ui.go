@@ -93,7 +93,8 @@ func (ui *UIListLayout) Update(w engine.World) {
 	for _, e := range items {
 		var child *component.UIChild
 		var render *component.Render
-		e.Get(&child, &render)
+		var list *component.UIList
+		e.Get(&child, &render, &list)
 		// belongs to this list?
 		if child.Parent != ui.UIList.ID {
 			continue
@@ -214,4 +215,13 @@ func (t *UIRenderLabel) Update(world engine.World) {
 		}
 	}
 	t.Render.Resize(int(totalW+2), int(totalH)) // TODO why do I have to add 2?
+}
+
+type UIRenderChild struct {
+	*component.Render
+	*component.UIChild
+}
+
+func (c *UIRenderChild) Update(w engine.World) {
+
 }

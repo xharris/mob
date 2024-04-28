@@ -18,10 +18,10 @@ func (*Hoverable) Update(w engine.World) {
 		var hover *component.Hoverable
 		e.Get(&render, &hover)
 		if render.MouseEntered() && hover.Enter != nil {
-			hover.Enter()
+			hover.Enter(e)
 		}
 		if render.MouseExited() && hover.Exit != nil {
-			hover.Exit()
+			hover.Exit(e)
 		}
 	}
 }

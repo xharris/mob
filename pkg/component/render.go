@@ -2,15 +2,26 @@ package component
 
 import "github.com/hajimehoshi/ebiten/v2"
 
+type AlphaLevel int
+
+const (
+	AlphaNone AlphaLevel = iota
+	AlphaLow
+	AlphaMid
+	AlphaHigh
+	AlphaFull
+)
+
 type Render struct {
 	Image            *ebiten.Image
-	DrawImageOptions ebiten.DrawImageOptions
+	DrawImageOptions *ebiten.DrawImageOptions
 	w, h             int
 	Z                int
 	X, Y             float64
 	mouseInside      bool
 	Visible          bool
 	Debug            bool
+	AlphaLevel       AlphaLevel
 }
 
 type RenderOption func(*Render)
@@ -19,11 +30,12 @@ func NewRender(opts ...RenderOption) Render {
 	gw, gh := ebiten.WindowSize()
 	r := Render{
 		Image:            ebiten.NewImage(gw, gh),
-		DrawImageOptions: ebiten.DrawImageOptions{},
+		DrawImageOptions: &ebiten.DrawImageOptions{},
 		w:                0,
 		h:                0,
 		Z:                0,
 		Visible:          true,
+		AlphaLevel:       AlphaFull,
 	}
 	for _, opt := range opts {
 		opt(&r)

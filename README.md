@@ -14,19 +14,17 @@ Setup > Strategy > Fight > Shop > Strategy > ...
 
 - Hire a new ally ($)
 - Fire an ally
-- Train an ally, random potential upgrade
-    - remove a bad move ($$)
-    - a good move happens twice ($$)
-    - larger number for good move ($)
-    - smaller number for bad move ($)
-    - add a good move ($$$)
+- Train an ally
+    - remove a debuff ($$)
+    - add a buff ($$$)
 
 ### Strategy
 
 - View enemy types in next room (sometimes unknown)
     - moveset
     - type (atk, sup)
-- Make ally 
+- Change ally settings
+    - target priority (different targets depending on mod type)
 
 ### Fight
 
@@ -34,3 +32,8 @@ Setup > Strategy > Fight > Shop > Strategy > ...
     - priority enemy
     - unoccupied enemy
 - Allies and enemies take turns performing their move(s)
+
+## Save data
+
+- Allies
+    - mods

@@ -29,7 +29,7 @@ func (m *Mod) IsGood() bool {
 	case Attack, Debuff:
 		return m.Target == Enemy
 	case Buff:
-		return m.Target == Ally
+		return m.Target == Ally || m.Target == Self
 	default:
 		return false
 	}

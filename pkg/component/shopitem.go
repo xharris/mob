@@ -9,4 +9,6 @@ type ShopItem struct {
 	RemoveMods  []allymod.Mod
 	UpgradeMods []allymod.Mod
 	Cost        int
+	Name        string
+	Purchased   bool
 }

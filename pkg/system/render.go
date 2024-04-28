@@ -24,23 +24,28 @@ func (r *RenderSystem) Draw(w engine.World, screen *ebiten.Image) {
 		if !render.Visible || render.Image == nil {
 			continue
 		}
-		render.DrawImageOptions.GeoM.Reset()
-		render.DrawImageOptions.GeoM.Translate(render.X, render.Y)
+		op := render.DrawImageOptions
+		op.GeoM.Reset()
+		op.GeoM.Translate(render.X, render.Y)
+		// alpha
+		op.ColorScale.Reset()
+		op.ColorScale.ScaleAlpha(float32(render.AlphaLevel) / float32(component.AlphaFull))
+		render.AlphaLevel = component.AlphaFull
+		rw, rh := render.GetSize()
 		// draw rect
 		if render.Debug {
 			vector.StrokeRect(
 				render.Image,
-				1, 1, float32(render.Image.Bounds().Dx()-1), float32(render.Image.Bounds().Dy()-1),
+				1, 1, float32(rw-1), float32(rh-1),
 				1, colornames.Green200, false,
 			)
 			vector.StrokeLine(
 				render.Image,
-				0, 0, float32(render.Image.Bounds().Dx()), float32(render.Image.Bounds().Dy()),
+				0, 0, float32(rw), float32(rh),
 				1, colornames.Green200, false,
 			)
 		}
-		// draw to screen
-		screen.DrawImage(render.Image, &render.DrawImageOptions)
+		screen.DrawImage(render.Image, op)
 	}
 }
 
