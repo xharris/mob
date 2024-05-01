@@ -7,5 +7,6 @@ func AddSystems(w engine.World) {
 		&RenderSystem{}, &ShopItem{},
 		&RenderRect{}, &UIRenderLabel{}, &UIListLayout{},
 		&Clickable{}, &UIGridLayout{}, &Hoverable{},
+		&Velocity{}, &Follow{}, &NPC{},
 	)
 }

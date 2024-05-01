@@ -2,10 +2,12 @@ package component
 
 import "github.com/sedyh/mizu/pkg/engine"
 
+const EntityNone int = -1
+
 func AddComponents(w engine.World) {
 	w.AddComponents(
-		Render{}, ShopItem{}, Rect{}, Health{},
+		Render{}, ShopItem{}, Rect{}, NPC{},
 		UIList{}, UILabel{}, UIChild{}, Clickable{},
-		UIGrid{}, Hoverable{}, Room{},
+		UIGrid{}, Hoverable{}, Room{}, Velocity{}, Follow{},
 	)
 }

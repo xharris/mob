@@ -26,7 +26,7 @@ var goodRoomTypes []RoomType = []RoomType{Rest, Library, Shop, Recruit}
 
 type Room struct {
 	X, Y    int
-	Enemies []Enemy
+	Enemies []NPC
 	// appears as 'unknown' to player
 	Unknown   bool
 	Completed bool

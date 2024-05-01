@@ -73,6 +73,9 @@ func (ui *UIGridLayout) Update(w engine.World) {
 		if ui.UIGrid.Align == component.END {
 			render.Y += float64(cellH) - float64(dy)
 		}
+		// TODO use render.GeoM.Apply instead? or just set these values to 0?
+		render.X += render.OX
+		render.Y += render.OY
 	}
 }
 
@@ -140,6 +143,9 @@ func (ui *UIListLayout) Update(w engine.World) {
 				render.Y += dy - float64(childH)
 			}
 		}
+		// TODO use render.GeoM.Apply instead? or just set these values to 0?
+		render.X += render.OX
+		render.Y += render.OY
 	}
 	// resize to fit contents
 	if ui.UIList.FitContents {

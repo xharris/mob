@@ -1,6 +1,10 @@
 package component
 
-import "github.com/hajimehoshi/ebiten/v2"
+import (
+	"math"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
 
 type AlphaLevel int
 
@@ -18,6 +22,7 @@ type Render struct {
 	w, h             int
 	Z                int
 	X, Y             float64
+	OX, OY           float64
 	mouseInside      bool
 	Visible          bool
 	Debug            bool
@@ -69,6 +74,13 @@ func WRenderPosition(x, y float64) RenderOption {
 	}
 }
 
+func WRenderOffset(x, y float64) RenderOption {
+	return func(r *Render) {
+		r.OX = x
+		r.OY = y
+	}
+}
+
 func (r *Render) Resize(w, h int) {
 	if w != r.w && h != r.h {
 		newImage := ebiten.NewImage(w, h)
@@ -112,4 +124,12 @@ func (r *Render) MouseExited() bool {
 		return true
 	}
 	return false
+}
+
+func (r *Render) Distance(other Render) float64 {
+	return math.Sqrt(math.Pow(other.X-r.X, 2) + math.Pow(other.Y-r.Y, 2))
+}
+
+func (r *Render) Apply(x, y float64) (float64, float64) {
+	return r.DrawImageOptions.GeoM.Apply(r.OX+x, r.OY+y)
 }

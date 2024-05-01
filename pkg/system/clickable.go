@@ -17,7 +17,7 @@ func (*Clickable) Update(w engine.World) {
 		var clickable *component.Clickable
 		var render *component.Render
 		e.Get(&clickable, &render)
-		if !clickable.Disabled && render.MouseInside() && inpututil.IsMouseButtonJustPressed(ebiten.MouseButton0) {
+		if clickable.Click != nil && !clickable.Disabled && render.MouseInside() && inpututil.IsMouseButtonJustPressed(ebiten.MouseButton0) {
 			clickable.Click(e)
 		}
 		// if clickable.Disabled {

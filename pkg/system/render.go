@@ -26,11 +26,11 @@ func (r *RenderSystem) Draw(w engine.World, screen *ebiten.Image) {
 		}
 		op := render.DrawImageOptions
 		op.GeoM.Reset()
+		op.GeoM.Translate(-render.OX, -render.OY)
 		op.GeoM.Translate(render.X, render.Y)
 		// alpha
 		op.ColorScale.Reset()
 		op.ColorScale.ScaleAlpha(float32(render.AlphaLevel) / float32(component.AlphaFull))
-		render.AlphaLevel = component.AlphaFull
 		rw, rh := render.GetSize()
 		// draw rect
 		if render.Debug {

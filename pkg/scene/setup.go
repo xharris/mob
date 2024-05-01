@@ -21,7 +21,7 @@ func (s *Setup) Setup(w engine.World) {
 		// get one free ally from shop
 		shop := &Shop{
 			Scene:         s.Scene,
-			ModCount:      3,
+			AllyCount:     3,
 			Free:          true,
 			PurchaseLimit: 1,
 			MustBuyOne:    true,

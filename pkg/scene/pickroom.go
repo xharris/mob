@@ -68,18 +68,19 @@ func (c *PickRoom) Setup(w engine.World) {
 				Render: component.NewRender(),
 				Clickable: component.Clickable{
 					Click: func(e engine.Entity) {
-						// TODO go to room
 						var cRoom *component.Room
 						e.Get(&cRoom)
 						switch cRoom.Type {
 						case component.Fight:
 							w.ChangeScene(&Fight{
-								Scene: c.Scene,
-								Room:  *cRoom,
+								Scene:    c.Scene,
+								Room:     *cRoom,
+								PrevRoom: *room,
 							})
 						default:
 							slog.Warn("room not implemented yet", "type", lang.Get(fmt.Sprintf("room%d", cRoom.Type)))
 						}
+						// TODO add other rooms
 					},
 				},
 				Hoverable: component.Hoverable{},

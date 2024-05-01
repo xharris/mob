@@ -1,12 +1,12 @@
 package game
 
 import (
-	"mob/pkg/entity"
+	"mob/pkg/component"
 	"mob/pkg/level"
 )
 
 type State struct {
-	Allies         []entity.Ally
+	Allies         []component.NPC
 	Level          level.Level
 	LevelX, LevelY int
 }

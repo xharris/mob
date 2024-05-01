@@ -5,7 +5,6 @@ import (
 	"log/slog"
 	"math/rand"
 	"mob/pkg/component"
-	"mob/pkg/mod"
 )
 
 type Level struct {
@@ -31,15 +30,19 @@ func (l *Level) generateRoom(x, y int) {
 		// TODO make it random
 		room := component.Room{
 			Type:    component.Fight,
-			Enemies: []component.Enemy{},
+			Enemies: []component.NPC{},
 		}
 		for range rand.Intn(l.Level+2) + 1 {
-			enemy := component.Enemy{
-				Mods: []mod.Mod{
-					{Name: "Slash", Type: mod.Attack, Target: mod.Ally},
-				},
-				Name: "goblin",
-			}
+			enemy := component.NewNPC(
+				component.WithMod(component.Mod{
+					Name:   "Slash",
+					Type:   component.Attack,
+					Target: component.TargetAlly,
+					Range:  component.Melee,
+				}),
+				component.WithName("goblin"),
+				component.WithType(component.Enemy),
+			)
 			room.Enemies = append(room.Enemies, enemy)
 		}
 		l.Rooms[y][x] = room

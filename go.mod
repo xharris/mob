@@ -3,6 +3,7 @@ module mob
 go 1.22.1
 
 require (
+	github.com/beefsack/go-astar v0.0.0-20200827232313-4ecf9e304482 // indirect
 	github.com/ebitengine/gomobile v0.0.0-20240329170434-1771503ff0a8 // indirect
 	github.com/ebitengine/hideconsole v1.0.0 // indirect
 	github.com/ebitengine/purego v0.7.0 // indirect
