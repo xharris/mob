@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"mob/pkg/component"
+	"mob/pkg/mods"
 	"mob/pkg/system"
 
 	"github.com/sedyh/mizu/pkg/engine"
@@ -89,12 +90,8 @@ func (s *Shop) Setup(w engine.World) {
 		shopitem := ShopAllyContainer{
 			Render: component.NewRender(),
 			ShopItem: component.ShopItem{
-				AddMods: []component.Mod{
-					{Name: "Slash", Type: component.Attack, Target: component.TargetEnemy, Range: component.Melee},
-					{Name: "Block", Type: component.Buff, Target: component.TargetSelf},
-					{Name: "Sleepy", Desc: "Might take a nap", Type: component.Debuff, Target: component.TargetSelf},
-				},
-				Name: "Sir Bobbington",
+				AddMods: []component.Mod{mods.Slash(), mods.Block(), mods.Sleepy()},
+				Name:    "Sir Bobbington",
 			},
 			Clickable: component.Clickable{
 				Click: func(e engine.Entity) {
@@ -109,7 +106,6 @@ func (s *Shop) Setup(w engine.World) {
 					// add new ally
 					npc := component.NewNPC(
 						component.WithMods(item.AddMods),
-						component.WithHealth(100, 100),
 					)
 					s.Scene.State.Allies = append(s.Scene.State.Allies, npc)
 

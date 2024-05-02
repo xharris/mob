@@ -17,7 +17,8 @@ func (*Follow) Update(w engine.World) {
 		var f *component.Follow
 		var render *component.Render
 		var vel *component.Velocity
-		e.Get(&f, &render, &vel)
+		var combat *component.Combat
+		e.Get(&f, &render, &vel, &combat)
 
 		target, targetExists := w.GetEntity(f.Target)
 		if !targetExists {
@@ -29,12 +30,21 @@ func (*Follow) Update(w engine.World) {
 
 		dist := math.Sqrt(math.Pow(tRender.X-render.X, 2) + math.Pow(tRender.Y-render.Y, 2))
 		f.TargetReached = dist < max(10, f.Radius)
+
+		speed := f.Speed
+		// apply combat move speed
+		if combat != nil {
+			speed *= combat.MoveSpeed
+			// slog.Info("follow", "speed", speed, "combat", combat.MoveSpeed)
+		}
+
 		if !f.TargetReached {
-			vel.X = (tRender.X - render.X) / dist * f.Speed
-			vel.Y = (tRender.Y - render.Y) / dist * f.Speed
+			vel.X = (tRender.X - render.X) / dist * speed
+			vel.Y = (tRender.Y - render.Y) / dist * speed
 		} else {
 			vel.X = 0
 			vel.Y = 0
 		}
+
 	}
 }

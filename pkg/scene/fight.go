@@ -16,6 +16,7 @@ type Fighter struct {
 	component.Rect
 	component.Follow
 	component.Velocity
+	component.Combat
 }
 
 type Fight struct {
@@ -43,6 +44,7 @@ func (f *Fight) Setup(w engine.World) {
 			},
 			Follow:   component.Follow{Speed: 2},
 			Velocity: component.Velocity{},
+			Combat:   component.NewCombat(component.WithCombatNPC(&enemy)),
 		}
 		w.AddEntities(&fighter)
 	}
@@ -62,6 +64,7 @@ func (f *Fight) Setup(w engine.World) {
 			},
 			Follow:   component.Follow{Speed: 1},
 			Velocity: component.Velocity{},
+			Combat:   component.NewCombat(component.WithCombatNPC(&ally)),
 		}
 		w.AddEntities(&fighter)
 	}

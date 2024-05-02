@@ -1,5 +1,9 @@
 package component
 
+import (
+	"github.com/sedyh/mizu/pkg/engine"
+)
+
 type ModType int
 
 const (
@@ -16,12 +20,24 @@ const (
 	TargetSelf
 )
 
+type ModOrder int
+
+const (
+	Normal ModOrder = iota
+	BeforeAll
+	AfterAll
+	BeforeAttack
+	AfterAttack
+)
+
 type Mod struct {
 	Name   string
 	Desc   string
 	Type   ModType
 	Target ModTarget
 	Range  NPCRange
+	Order  ModOrder
+	Move   Move
 }
 
 func (m *Mod) IsGood() bool {
@@ -62,22 +78,16 @@ const (
 )
 
 type NPC struct {
-	Mods            []Mod
-	Name            string
-	Type            NPCType
-	HealthRemaining int
-	HealthTotal     int
+	Mods []Mod
+	// mods gained during combat
+	combatMods []Mod
+	Name       string
+	Type       NPCType
 	// targeting strategy
 	Strategy NPCStrategy
-	// entity id
-	Target int
-	// -1 for infinite range
-	AggroRange float64
 }
 
 func NewNPC(options ...NPCOption) (n NPC) {
-	n.Target = EntityNone
-	n.AggroRange = -1
 	for _, opt := range options {
 		opt(&n)
 	}
@@ -112,13 +122,6 @@ func WithType(t NPCType) NPCOption {
 	}
 }
 
-func WithHealth(total int, remaining int) NPCOption {
-	return func(n *NPC) {
-		n.HealthTotal = total
-		n.HealthRemaining = remaining
-	}
-}
-
 func (n *NPC) AddMod(m Mod) {
 	var mods []Mod
 	found := false
@@ -135,6 +138,14 @@ func (n *NPC) AddMod(m Mod) {
 	n.Mods = mods
 }
 
+func (n *NPC) AddCombatMod(m Mod) {
+	n.combatMods = append(n.combatMods, m)
+}
+
+func (n *NPC) ClearCombatMods(m Mod) {
+	n.combatMods = make([]Mod, 0)
+}
+
 func (n *NPC) RemoveMod(m Mod) {
 	var mods []Mod
 	for _, am := range n.Mods {
@@ -145,10 +156,12 @@ func (n *NPC) RemoveMod(m Mod) {
 	n.Mods = mods
 }
 
-func (n *NPC) GetAttackRange() (r float64) {
-	for _, m := range n.Mods {
-		if float64(m.Range) > r {
-			r = float64(m.Range)
+func GetAllNPCOfType(w engine.World, npcType NPCType) (entities []engine.Entity) {
+	for _, e := range w.View(NPC{}).Filter() {
+		var npc *NPC
+		e.Get(&npc)
+		if npc.Type == npcType {
+			entities = append(entities, e)
 		}
 	}
 	return

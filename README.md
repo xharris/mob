@@ -29,12 +29,14 @@ Setup > Strategy > Fight > Shop > Strategy > ...
 
 ### Fight
 
-- Allies enter room, then move to and interact with...
-    - priority enemy
-    - unoccupied enemy
-- Allies and enemies take turns performing their move(s)
+- Do move every X seconds
 
 ## Save data
 
 - Allies
     - mods
+
+## Scripting
+
+- https://github.com/d5/tengo
+- for adding to pkg/mods

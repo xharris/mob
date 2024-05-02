@@ -23,7 +23,7 @@ func (s *ShopItem) Update(w engine.World) {
 			var child *component.UIChild
 			var render *component.Render
 			c.Get(&child, &render)
-			if child.Parent == s.ID {
+			if child.Parent == s.UIList.ID {
 				render.AlphaLevel = component.AlphaMid
 			}
 		}
