@@ -11,7 +11,7 @@ func AddSystems(w engine.World) {
 		&RenderSystem{}, &ShopItem{},
 		&RenderRect{}, &UIRenderLabel{}, &UIListLayout{},
 		&Clickable{}, &UIGridLayout{}, &Hoverable{},
-		&Velocity{}, &Follow{}, &NPC{}, &Combat{},
-		&timer.TimerTick{}, &Combat{},
+		&Velocity{}, &Follow{}, &NPC{},
+		&timer.TimerTick{}, &Combat{}, &Health{},
 	)
 }

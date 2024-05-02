@@ -1,7 +1,6 @@
 package system
 
 import (
-	"log/slog"
 	"math/rand"
 	"mob/pkg/component"
 	"slices"
@@ -95,7 +94,7 @@ func (*Combat) Update(w engine.World) {
 			var tNPC *component.NPC
 			targetEntity.Get(&tRender, &tNPC)
 
-			f.Radius = float64(max(render.GetSize()))
+			f.Radius = combat.GetAttackRange()
 			f.Target = targetEntity.ID()
 			combat.WithinRange = render.Distance(*tRender) <= combat.GetAttackRange()
 		}
@@ -109,14 +108,7 @@ func (*Combat) Update(w engine.World) {
 		var tRender *component.Render
 		target.Get(&tNPC, &tRender)
 		// use next move in moveset
-		move, tick, ok := combat.UseMove(w, render.Distance(*tRender))
-		if !ok {
-			continue
-		}
-		slog.Info("combat use move", "move", tick.Name)
-		tick.Self = e
-		tick.Target = target
-		move.Tick(tick)
+		combat.UseMove(w, e, target)
 	}
 }
 

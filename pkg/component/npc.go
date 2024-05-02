@@ -38,6 +38,7 @@ type Mod struct {
 	Range  NPCRange
 	Order  ModOrder
 	Move   Move
+	Once   bool
 }
 
 func (m *Mod) IsGood() bool {

@@ -2,7 +2,6 @@ package scene
 
 import (
 	"log/slog"
-	"math/rand"
 	"mob/pkg/component"
 	"mob/pkg/system"
 
@@ -17,6 +16,7 @@ type Fighter struct {
 	component.Follow
 	component.Velocity
 	component.Combat
+	component.Health
 }
 
 type Fight struct {
@@ -35,7 +35,7 @@ func (f *Fight) Setup(w engine.World) {
 		if i > 0 {
 			break // TODO REMOVE
 		}
-		x, y := rand.Intn(w.Bounds().Dx()-100)+50, rand.Intn(w.Bounds().Dy()-100)+50
+		x, y := w.Bounds().Dx()/2, w.Bounds().Dy()/2 // rand.Intn(w.Bounds().Dx()-100)+50, rand.Intn(w.Bounds().Dy()-100)+50
 		fighter := Fighter{
 			NPC:    enemy,
 			Render: component.NewRender(component.WRenderPosition(float64(x), float64(y)), component.WRenderSize(32, 32)),
@@ -45,6 +45,7 @@ func (f *Fight) Setup(w engine.World) {
 			Follow:   component.Follow{Speed: 2},
 			Velocity: component.Velocity{},
 			Combat:   component.NewCombat(component.WithCombatNPC(&enemy)),
+			Health:   component.NewHealth(),
 		}
 		w.AddEntities(&fighter)
 	}
@@ -55,7 +56,7 @@ func (f *Fight) Setup(w engine.World) {
 			break // TODO REMOVE
 		}
 		// get position of entrance
-		x, y := rand.Intn(w.Bounds().Dx()-100)+50, rand.Intn(w.Bounds().Dy()-100)+50
+		x, y := 0, w.Bounds().Dy()/2 // rand.Intn(w.Bounds().Dx()-100)+50, rand.Intn(w.Bounds().Dy()-100)+50
 		fighter := Fighter{
 			NPC:    ally,
 			Render: component.NewRender(component.WRenderPosition(float64(x), float64(y)), component.WRenderSize(32, 32)),
@@ -65,6 +66,7 @@ func (f *Fight) Setup(w engine.World) {
 			Follow:   component.Follow{Speed: 1},
 			Velocity: component.Velocity{},
 			Combat:   component.NewCombat(component.WithCombatNPC(&ally)),
+			Health:   component.NewHealth(),
 		}
 		w.AddEntities(&fighter)
 	}

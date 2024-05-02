@@ -34,3 +34,15 @@ func (t *Timer) Done() bool {
 	}
 	return false
 }
+
+// returns 0-100
+func (t *Timer) Ratio() int {
+	incr := t.every * float64(ebiten.TPS())
+	if incr == 0 || ticks == t.start {
+		return 0 // at start
+	}
+	if float64(ticks-t.start) == incr {
+		return 100 // done
+	}
+	return int(float64((ticks-t.start)%int(incr)) / float64(incr) * 100)
+}

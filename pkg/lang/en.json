@@ -10,5 +10,9 @@
     "room7": "Recruit",
     "room8": "A Tough Decision",
     "room9": "A Really Tough Decision",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "sleepy_desc": "Might take a nap",
+    "block_desc": " ",
+    "slash_desc": " ",
+    "sleeping_desc": " "
 }

@@ -1,12 +1,11 @@
 package mods
 
 import (
+	"log/slog"
 	"mob/pkg/component"
 )
 
-type slash struct {
-	T int
-}
+type slash struct{}
 
 func Slash() component.Mod {
 	return component.Mod{
@@ -22,5 +21,10 @@ func (s *slash) Tick(mt component.MoveTick) {
 	if !mt.WithinRange {
 		return
 	}
-	s.T += 1
+	if mt.Timer.Ratio() == 0 {
+		slog.Info("start slash")
+	}
+	if mt.Timer.Ratio() == 1 {
+		slog.Info("done slash")
+	}
 }

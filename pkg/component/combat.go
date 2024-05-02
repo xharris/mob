@@ -30,8 +30,10 @@ type Move interface {
 }
 
 type Combat struct {
-	Mods   []Mod
-	Shield int
+	Mods []Mod
+	// added to Mods after all mods are called
+	addedMods []Mod
+	Shield    int
 	// stacks of damage negation
 	NegateDamage int
 	// targeting strategy
@@ -43,19 +45,17 @@ type Combat struct {
 	AggroRange  float64
 	AttackSpeed float64
 	MoveSpeed   float64
-	ModIndex    int
+	// skip X moves
+	Skip     int
+	ModIndex int
 	// called when executing the move
 	CurrentMoveTick MoveTick
-
-	currentMoveset   []Move
-	currentMoveticks []MoveTick
 }
 
 func NewCombat(options ...CombatOption) (c Combat) {
 	c.Target = EntityNone
 	c.AggroRange = -1
-	c.AttackSpeed = 1.0
-	c.MoveSpeed = 1.0
+	c.Reset()
 	for _, opt := range options {
 		opt(&c)
 	}
@@ -79,51 +79,104 @@ func (c *Combat) GetAttackRange() (r float64) {
 	return
 }
 
-func (c *Combat) UseMove(w engine.World, targetDist float64) (move Move, tick MoveTick, ok bool) {
+func (c *Combat) Reset() {
+	c.AttackSpeed = 1.0
+	c.MoveSpeed = 1.0
+	c.Skip = 0
+}
+
+func (c *Combat) sortMods() {
+	slices.SortStableFunc(c.Mods, func(a Mod, b Mod) int {
+		return int(b.Order) - int(a.Order)
+	})
+}
+
+func (c *Combat) UseMove(w engine.World, self engine.Entity, target engine.Entity) (move Move, tick MoveTick, ok bool) {
 	if len(c.Mods) == 0 {
 		ok = false
+		slog.Warn("entity does not have any mods")
 		return
 	}
 	ok = true
-	if !c.CurrentMoveTick.Valid() || c.CurrentMoveTick.IsDone() {
-		if c.ModIndex == 0 {
-			// sort mods by order
-			slices.SortStableFunc(c.Mods, func(a Mod, b Mod) int {
-				return int(b.Order) - int(a.Order)
-			})
+	// get distance to target
+	var render *Render
+	self.Get(&render)
+	var tRender *Render
+	target.Get(&tRender)
+	if render == nil || tRender == nil {
+		ok = false
+		slog.Warn("entity is missing render component")
+		return
+	}
+	targetDist := render.Distance(*tRender)
+
+	firstRun := !c.CurrentMoveTick.Valid()
+	newRun := c.CurrentMoveTick.Valid() && c.ModIndex >= len(c.Mods)
+	if firstRun || newRun {
+		// use new mods gained during combat and sort them
+		c.ModIndex = 0
+		c.Mods = append(c.Mods, c.addedMods...)
+		c.addedMods = make([]Mod, 0)
+		c.sortMods()
+		// debug
+		var names []string
+		for _, m := range c.Mods {
+			names = append(names, m.Name)
 		}
-		// use next 'move' (mod)
-		m := c.Mods[c.ModIndex]
-		c.CurrentMoveTick = MoveTick{
-			W:           w,
-			Timer:       timer.NewTimer(float64(1 / len(c.Mods))),
-			WithinRange: targetDist <= float64(m.Range),
-			Name:        m.Name,
-		}
-		c.ModIndex++
-		if c.ModIndex >= len(c.Mods) {
-			c.ModIndex = 0
+		slog.Info("moveset", "i", c.ModIndex, "current", names)
+	}
+	currentMod := c.Mods[c.ModIndex]
+	currentMoveIsDone := c.CurrentMoveTick.Valid() && c.CurrentMoveTick.IsDone()
+	if currentMoveIsDone {
+		// move just finished, reset stuff
+		slog.Info("finished move", "name", c.CurrentMoveTick.Name)
+		c.Reset()
+		if currentMod.Once {
+			// remove from mods
+			var newMods []Mod
+			for i := range c.Mods {
+				if i != c.ModIndex {
+					newMods = append(newMods, c.Mods[i])
+				}
+			}
+			c.Mods = newMods
+		} else {
+			// increase index for next call
+			c.ModIndex++
 		}
 	}
-	move = c.Mods[c.ModIndex].Move
+	if firstRun || newRun || currentMoveIsDone {
+		c.CurrentMoveTick = MoveTick{
+			W:      w,
+			Timer:  timer.NewTimer(1.0 / float64(len(c.Mods))),
+			Name:   currentMod.Name,
+			Self:   self,
+			Target: target,
+		}
+	}
+	move = currentMod.Move
 	tick = c.CurrentMoveTick
+	tick.WithinRange = targetDist <= float64(currentMod.Range)
+
+	if !ok {
+		return
+	}
+
+	if c.Skip > 0 {
+		c.Skip--
+		slog.Info("skipped", "left", c.Skip)
+		return
+	}
+
+	move.Tick(tick)
+
 	return
 }
 
-func (c *Combat) ClearMoveset() {
-	c.currentMoveset = make([]Move, 0)
-	c.currentMoveticks = make([]MoveTick, 0)
-}
-
-func (c *Combat) ReplaceMoves(count int, replacement Mod) {
-	for i := range c.currentMoveset {
-		if i > 0 && i <= count {
-			slog.Info("replace", "", c.currentMoveticks[i].Name, "->", replacement.Name)
-			c.currentMoveset[i] = replacement.Move
-		}
-	}
+func (c *Combat) AddMods(mods ...Mod) {
+	c.addedMods = append(c.addedMods, mods...)
 }
 
 func (c *Combat) MovesLeft() int {
-	return len(c.currentMoveset)
+	return len(c.Mods) - c.ModIndex
 }

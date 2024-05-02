@@ -5,15 +5,11 @@ import (
 	"mob/pkg/component"
 )
 
-type sleepy struct {
-	ticked     bool
-	isSleeping bool
-}
+type sleepy struct{}
 
 func Sleepy() component.Mod {
 	return component.Mod{
-		Name:   "Sleepy",
-		Desc:   "Might take a nap",
+		Name:   "sleepy",
 		Type:   component.Debuff,
 		Target: component.TargetSelf,
 		Move:   &sleepy{},
@@ -26,17 +22,28 @@ func (s *sleepy) Tick(mt component.MoveTick) {
 	var velocity *component.Velocity
 	mt.Self.Get(&combat, &velocity)
 
-	if s.isSleeping {
-		combat.MoveSpeed = 0
+	if mt.Timer.Ratio() == 0 {
+		slog.Info("getting sleepy")
+		combat.AddMods(Sleeping())
 	}
-	if s.ticked {
-		return
+}
+
+type sleeping struct{}
+
+func Sleeping() component.Mod {
+	return component.Mod{
+		Name:   "sleeping",
+		Type:   component.Debuff,
+		Target: component.TargetSelf,
+		Move:   &sleeping{},
+		Order:  component.AfterAll,
+		Once:   true,
 	}
-	s.ticked = true
-	if velocity == nil {
-		slog.Warn("could not sleep, missing velocity")
-		return
-	}
-	// skip the remaining actions
-	combat.ReplaceMoves(1, Sleepy())
+}
+
+func (s *sleeping) Tick(mt component.MoveTick) {
+	var combat *component.Combat
+	mt.Self.Get(&combat)
+	slog.Info("sleep")
+	combat.MoveSpeed = 0
 }

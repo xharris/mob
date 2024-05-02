@@ -9,5 +9,6 @@ func AddComponents(w engine.World) {
 		Render{}, ShopItem{}, Rect{}, NPC{}, Combat{},
 		UIList{}, UILabel{}, UIChild{}, Clickable{},
 		UIGrid{}, Hoverable{}, Room{}, Velocity{}, Follow{},
+		Health{},
 	)
 }

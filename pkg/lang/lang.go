@@ -28,5 +28,8 @@ func Get(id string) string {
 		slog.Warn("error while getting lang string", "err", err)
 		// str = id
 	}
+	if str == " " {
+		str = ""
+	}
 	return str
 }

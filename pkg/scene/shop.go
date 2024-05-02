@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"mob/pkg/component"
+	"mob/pkg/lang"
 	"mob/pkg/mods"
 	"mob/pkg/system"
 
@@ -149,7 +150,7 @@ func (s *Shop) Setup(w engine.World) {
 						label.Text = append(label.Text,
 							component.UILabelText{Text: addMod.Name, Color: color},
 							component.UILabelText{Text: nameSuffix + " ", Color: color},
-							component.UILabelText{Text: addMod.Desc, Color: colornames.Grey100},
+							component.UILabelText{Text: lang.Get(fmt.Sprintf("%s_desc", addMod.Name)), Color: colornames.Grey100},
 							component.UILabelText{Newline: true},
 						)
 					}
