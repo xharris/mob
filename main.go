@@ -18,6 +18,7 @@ func main() {
 
 	ebiten.SetWindowSize(600, 400)
 	ebiten.SetWindowTitle("allies in a dungeon")
+	ebiten.SetWindowResizingMode(ebiten.WindowResizingModeEnabled)
 
 	setup := &scene.Setup{
 		NewGame: true,

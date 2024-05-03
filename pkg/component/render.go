@@ -21,11 +21,15 @@ type RenderGeometry struct {
 	Z          int
 	X, Y       float64
 	OX, OY     float64
+	SX, SY     float64
 	AlphaLevel AlphaLevel
+	w, h       int
 }
 
 func NewRenderGeometry() RenderGeometry {
 	return RenderGeometry{
+		SX:         1,
+		SY:         1,
 		Z:          0,
 		AlphaLevel: AlphaFull,
 	}
@@ -34,6 +38,13 @@ func NewRenderGeometry() RenderGeometry {
 func (r *RenderGeometry) GetOptions(inherit ...RenderGeometry) ebiten.DrawImageOptions {
 	op := ebiten.DrawImageOptions{}
 	op.GeoM.Translate(-r.OX, -r.OY)
+	op.GeoM.Scale(r.SX, r.SY)
+	if r.SX < 0 {
+		op.GeoM.Translate(float64(r.w)*r.SX, 0)
+	}
+	if r.SY < 0 {
+		op.GeoM.Translate(0, float64(r.h)*r.SY)
+	}
 	op.GeoM.Translate(r.X, r.Y)
 	// alpha
 	op.ColorScale.ScaleAlpha(float32(r.AlphaLevel) / float32(AlphaFull))
@@ -44,6 +55,11 @@ func (r *RenderGeometry) GetOptions(inherit ...RenderGeometry) ebiten.DrawImageO
 		op.ColorScale.ScaleWithColorScale(otherOp.ColorScale)
 	}
 	return op
+}
+
+func (r *RenderGeometry) SetSize(w, h int) {
+	r.w = w
+	r.h = h
 }
 
 type renderTexture struct {

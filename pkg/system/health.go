@@ -16,11 +16,10 @@ type Health struct {
 
 func (h *Health) Draw(w engine.World, _ *ebiten.Image) {
 	texture := h.GetTexture(h.Health, 30, 5)
-	opts := h.Render.RenderGeometry.GetOptions()
-	_, rh := h.Render.GetSize()
-	opts.GeoM.Translate(0, -float64(rh))
+	texture.Y = -20
 	// draw health bar
 	ratio := float32(h.Health.Remaining / h.Health.Total)
+	texture.RenderGeometry.X = -15
 	texture.RenderGeometry.Y = -20
 	vector.DrawFilledRect(texture.Image, 0, 0, 30*ratio, 5, colornames.White, false)
 }

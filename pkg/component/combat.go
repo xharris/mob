@@ -1,13 +1,15 @@
 package component
 
 import (
-	"log/slog"
 	"math/rand"
+	"mob/pkg/logger"
 	"mob/pkg/timer"
 	"slices"
 
 	"github.com/sedyh/mizu/pkg/engine"
 )
+
+var logCombat = logger.NewLogger() // logger.WithDebug())
 
 type MoveTick struct {
 	W           engine.World
@@ -103,7 +105,7 @@ func (c *Combat) sortMods() {
 func (c *Combat) UseMove(w engine.World, self engine.Entity, target engine.Entity) (move Move, tick MoveTick, ok bool) {
 	if len(c.Mods) == 0 {
 		ok = false
-		slog.Warn("entity does not have any mods")
+		logCombat.Warn("entity does not have any mods")
 		return
 	}
 	ok = true
@@ -114,7 +116,7 @@ func (c *Combat) UseMove(w engine.World, self engine.Entity, target engine.Entit
 	target.Get(&tRender)
 	if render == nil || tRender == nil {
 		ok = false
-		slog.Warn("entity is missing render component")
+		logCombat.Warn("entity is missing render component")
 		return
 	}
 	targetDist := render.Distance(*tRender)
@@ -132,13 +134,13 @@ func (c *Combat) UseMove(w engine.World, self engine.Entity, target engine.Entit
 		for _, m := range c.Mods {
 			names = append(names, m.Name)
 		}
-		slog.Info("moveset", "i", c.ModIndex, "current", names)
+		logCombat.Debug("moveset", "i", c.ModIndex, "current", names)
 	}
 	currentMod := c.Mods[c.ModIndex]
 	currentMoveIsDone := c.CurrentMoveTick.Valid() && c.CurrentMoveTick.IsDone()
 	if currentMoveIsDone {
 		// move just finished, reset stuff
-		slog.Info("finished move", "name", c.CurrentMoveTick.Name)
+		logCombat.Debug("finished move", "name", c.CurrentMoveTick.Name)
 		if c.Skip <= 0 {
 			c.Reset()
 		}
@@ -175,7 +177,7 @@ func (c *Combat) UseMove(w engine.World, self engine.Entity, target engine.Entit
 
 	if c.Skip > 0 {
 		c.Skip--
-		slog.Info("skipped", "left", c.Skip)
+		logCombat.Debug("skipped", "left", c.Skip)
 		return
 	}
 

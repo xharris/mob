@@ -1,9 +1,11 @@
 package mods
 
 import (
-	"log/slog"
 	"mob/pkg/component"
+	"mob/pkg/logger"
 )
+
+var logSleepy = logger.NewLogger()
 
 type sleepy struct{}
 
@@ -23,7 +25,7 @@ func (s *sleepy) Tick(mt component.MoveTick) {
 	mt.Self.Get(&combat, &velocity)
 
 	if mt.Timer.Ratio() == 0 {
-		slog.Info("getting sleepy")
+		logSleepy.Debug("getting sleepy")
 		combat.AddMods(Sleeping())
 	}
 }
@@ -45,7 +47,7 @@ func (s *sleeping) Tick(mt component.MoveTick) {
 	var combat *component.Combat
 	mt.Self.Get(&combat)
 	if mt.Timer.Ratio() == 0 {
-		slog.Info("sleep")
+		logSleepy.Debug("sleep")
 		combat.MoveSpeed = 0
 		combat.Skip += 1
 	}

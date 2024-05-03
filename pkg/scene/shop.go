@@ -21,9 +21,9 @@ type ShopAllyContainer struct {
 	component.UIChild
 }
 
-type ShopAllyRect struct {
+type ShopAllyNPC struct {
 	component.Render
-	component.Rect
+	component.NPC
 	component.UIChild
 }
 
@@ -66,6 +66,10 @@ type Shop struct {
 	continueShown  bool
 	purchasedCount int
 	PurchaseLimit  int
+}
+
+func (s *Shop) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+	return 600, 400
 }
 
 func (s *Shop) Setup(w engine.World) {
@@ -179,13 +183,11 @@ func (s *Shop) Setup(w engine.World) {
 		}
 		w.AddEntities(&shopitem)
 		// ally image
-		allyRect := ShopAllyRect{
+		allyRect := ShopAllyNPC{
 			Render: component.NewRender(),
-			Rect: component.Rect{
-				Color: colornames.Green400,
-				W:     32,
-				H:     32,
-			},
+			NPC: component.NewNPC(
+				component.WithName("Sir Bobbington"),
+			),
 			UIChild: component.UIChild{
 				Parent: shopItemID,
 			},

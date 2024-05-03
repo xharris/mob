@@ -26,6 +26,7 @@ func (r *RenderSystem) Draw(w engine.World, screen *ebiten.Image) {
 			continue
 		}
 		for _, texture := range render.Textures {
+			texture.RenderGeometry.SetSize(texture.GetSize())
 			textureOptions := texture.RenderGeometry.GetOptions(render.RenderGeometry)
 			// draw rect
 			if render.Debug {

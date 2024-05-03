@@ -116,7 +116,7 @@ func (*Combat) Draw(w engine.World, screen *ebiten.Image) {
 	if !combatDebug {
 		return
 	}
-	v := w.View(component.Render{}, component.NPC{})
+	v := w.View(component.Render{}, component.NPC{}, component.Combat{})
 
 	for _, e := range v.Filter() {
 		var render *component.Render

@@ -1,6 +1,8 @@
 package component
 
 import (
+	"mob/pkg/timer"
+
 	"github.com/sedyh/mizu/pkg/engine"
 )
 
@@ -82,7 +84,8 @@ const (
 type NPCAnimation float64
 
 const (
-	Happy NPCAnimation = iota
+	Neutral NPCAnimation = iota
+	Happy
 	Sad
 	Angry
 	Spinning
@@ -92,6 +95,50 @@ const (
 	EyesClosed
 )
 
+type NPCAnimationSprite struct {
+	Part      NPCAnimationPart
+	Animation NPCAnimation
+	Path      string
+	Frames    int
+}
+
+func NewNPCAnimationSprite(opts ...NPCAnimationSpriteOption) (a NPCAnimationSprite) {
+	for _, opt := range opts {
+		opt(&a)
+	}
+	return
+}
+
+type NPCAnimationSpriteOption func(*NPCAnimationSprite)
+
+func WithPart(part NPCAnimationPart) NPCAnimationSpriteOption {
+	return func(ns *NPCAnimationSprite) {
+		ns.Part = part
+	}
+}
+
+func WithAnimation(animation NPCAnimation) NPCAnimationSpriteOption {
+	return func(ns *NPCAnimationSprite) {
+		ns.Animation = animation
+	}
+}
+
+func WithPath(path string) NPCAnimationSpriteOption {
+	return func(ns *NPCAnimationSprite) {
+		ns.Path = path
+	}
+}
+
+type NPCAnimationPart int
+
+const (
+	AnimFill NPCAnimationPart = iota
+	AnimBase
+	AnimEyes
+	AnimArm
+	AnimFeet
+)
+
 type NPC struct {
 	Mods []Mod
 	// mods gained during combat
@@ -99,11 +146,19 @@ type NPC struct {
 	Name       string
 	Type       NPCType
 	// targeting strategy
-	Strategy   NPCStrategy
-	Animations map[NPCAnimation]bool
+	Strategy NPCStrategy
+	// center animation sprites?
+	Center           bool
+	Animations       map[NPCAnimation]bool
+	AnimationSprites map[NPCAnimationPart]NPCAnimationSprite
+	AnimationTimer   timer.Timer
 }
 
 func NewNPC(options ...NPCOption) (n NPC) {
+	n.Animations = make(map[NPCAnimation]bool)
+	n.AnimationSprites = make(map[NPCAnimationPart]NPCAnimationSprite)
+	n.AnimationTimer = timer.NewTimer(1)
+	n.AddAnimations(Neutral)
 	for _, opt := range options {
 		opt(&n)
 	}
@@ -173,14 +228,70 @@ func (n *NPC) RemoveMod(m Mod) {
 }
 
 func (n *NPC) AddAnimations(animations ...NPCAnimation) {
+	if n.Animations == nil {
+		n.Animations = make(map[NPCAnimation]bool)
+	}
 	for _, anim := range animations {
 		n.Animations[anim] = true
 	}
 }
 
 func (n *NPC) RemoveAnimations(animations ...NPCAnimation) {
+	if n.Animations == nil {
+		n.Animations = make(map[NPCAnimation]bool)
+	}
 	for _, anim := range animations {
 		n.Animations[anim] = false
+	}
+}
+
+func (n *NPC) UseAnimationSprite(animation NPCAnimationSprite) {
+	if n.AnimationSprites == nil {
+		n.AnimationSprites = make(map[NPCAnimationPart]NPCAnimationSprite)
+	}
+	existing, ok := n.AnimationSprites[animation.Part]
+	if !ok || existing.Path != animation.Path {
+		n.AnimationSprites[animation.Part] = animation
+	}
+}
+
+// update sprites for current animations
+func (n *NPC) UpdateAnimations() {
+	atLeastOne := false
+	// for anim := range n.Animations {
+	// 	atLeastOne = true
+	// 	// switch anim {
+	// 	// default:
+
+	// 	// }
+	// }
+	if !atLeastOne {
+		// neutral
+		n.UseAnimationSprite(NewNPCAnimationSprite(
+			WithAnimation(Neutral),
+			WithPart(AnimFill),
+			WithPath("asset/image/ally/fill.png"),
+		))
+		n.UseAnimationSprite(NewNPCAnimationSprite(
+			WithAnimation(Neutral),
+			WithPart(AnimBase),
+			WithPath("asset/image/ally/base.png"),
+		))
+		n.UseAnimationSprite(NewNPCAnimationSprite(
+			WithAnimation(Neutral),
+			WithPart(AnimEyes),
+			WithPath("asset/image/ally/eyes.png"),
+		))
+		n.UseAnimationSprite(NewNPCAnimationSprite(
+			WithAnimation(Neutral),
+			WithPart(AnimArm),
+			WithPath("asset/image/ally/arm.png"),
+		))
+		n.UseAnimationSprite(NewNPCAnimationSprite(
+			WithAnimation(Neutral),
+			WithPart(AnimFeet),
+			WithPath("asset/image/ally/feet.png"),
+		))
 	}
 }
 
