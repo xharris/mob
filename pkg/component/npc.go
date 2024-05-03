@@ -28,6 +28,7 @@ const (
 	AfterAll
 	BeforeAttack
 	AfterAttack
+	OrderRandom
 )
 
 type Mod struct {
@@ -78,6 +79,19 @@ const (
 	Ranged NPCRange = 90
 )
 
+type NPCAnimation float64
+
+const (
+	Happy NPCAnimation = iota
+	Sad
+	Angry
+	Spinning
+	Bouncing
+	Walking
+	Falling
+	EyesClosed
+)
+
 type NPC struct {
 	Mods []Mod
 	// mods gained during combat
@@ -85,7 +99,8 @@ type NPC struct {
 	Name       string
 	Type       NPCType
 	// targeting strategy
-	Strategy NPCStrategy
+	Strategy   NPCStrategy
+	Animations map[NPCAnimation]bool
 }
 
 func NewNPC(options ...NPCOption) (n NPC) {
@@ -155,6 +170,18 @@ func (n *NPC) RemoveMod(m Mod) {
 		}
 	}
 	n.Mods = mods
+}
+
+func (n *NPC) AddAnimations(animations ...NPCAnimation) {
+	for _, anim := range animations {
+		n.Animations[anim] = true
+	}
+}
+
+func (n *NPC) RemoveAnimations(animations ...NPCAnimation) {
+	for _, anim := range animations {
+		n.Animations[anim] = false
+	}
 }
 
 func GetAllNPCOfType(w engine.World, npcType NPCType) (entities []engine.Entity) {

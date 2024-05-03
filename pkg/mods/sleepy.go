@@ -36,7 +36,7 @@ func Sleeping() component.Mod {
 		Type:   component.Debuff,
 		Target: component.TargetSelf,
 		Move:   &sleeping{},
-		Order:  component.AfterAll,
+		Order:  component.OrderRandom,
 		Once:   true,
 	}
 }
@@ -44,6 +44,9 @@ func Sleeping() component.Mod {
 func (s *sleeping) Tick(mt component.MoveTick) {
 	var combat *component.Combat
 	mt.Self.Get(&combat)
-	slog.Info("sleep")
-	combat.MoveSpeed = 0
+	if mt.Timer.Ratio() == 0 {
+		slog.Info("sleep")
+		combat.MoveSpeed = 0
+		combat.Skip += 1
+	}
 }

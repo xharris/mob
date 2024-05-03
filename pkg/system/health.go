@@ -14,12 +14,13 @@ type Health struct {
 	*component.Health
 }
 
-func (h *Health) Draw(w engine.World, screen *ebiten.Image) {
-	opts := h.Render.DrawImageOptions
+func (h *Health) Draw(w engine.World, _ *ebiten.Image) {
+	texture := h.GetTexture(h.Health, 30, 5)
+	opts := h.Render.RenderGeometry.GetOptions()
 	_, rh := h.Render.GetSize()
 	opts.GeoM.Translate(0, -float64(rh))
 	// draw health bar
 	ratio := float32(h.Health.Remaining / h.Health.Total)
-	x, y := opts.GeoM.Apply(0, 0)
-	vector.DrawFilledRect(screen, float32(x), float32(y), 30*ratio, 5, colornames.White, false)
+	texture.RenderGeometry.Y = -20
+	vector.DrawFilledRect(texture.Image, 0, 0, 30*ratio, 5, colornames.White, false)
 }

@@ -74,7 +74,7 @@ func (s *Shop) Setup(w engine.World) {
 	system.AddSystems(w)
 
 	shopItemsUI := UI{
-		Render: component.NewRender(),
+		Render: component.NewRender(component.WGameSize(), component.WRenderDebug()),
 		UIGrid: component.UIGrid{
 			ID:      "shop-items-ui",
 			Columns: min(5, s.ModCount+s.AllyCount),
@@ -89,7 +89,7 @@ func (s *Shop) Setup(w engine.World) {
 		shoptItemTooltipID := component.UI_ID(fmt.Sprintf("shop-item-tooltip-%d", i))
 		shopItemID := component.UI_ID(fmt.Sprintf("shop-item-%d", i))
 		shopitem := ShopAllyContainer{
-			Render: component.NewRender(),
+			Render: component.NewRender(component.WRenderDebug()),
 			ShopItem: component.ShopItem{
 				AddMods: []component.Mod{mods.Slash(), mods.Block(), mods.Sleepy()},
 				Name:    "Sir Bobbington",
@@ -180,9 +180,11 @@ func (s *Shop) Setup(w engine.World) {
 		w.AddEntities(&shopitem)
 		// ally image
 		allyRect := ShopAllyRect{
-			Render: component.NewRender(component.WRenderSize(32, 32)),
+			Render: component.NewRender(),
 			Rect: component.Rect{
 				Color: colornames.Green400,
+				W:     32,
+				H:     32,
 			},
 			UIChild: component.UIChild{
 				Parent: shopItemID,
@@ -209,7 +211,7 @@ func (s *Shop) Setup(w engine.World) {
 		w.AddEntities(&costLabel)
 	}
 	ui := UI{
-		Render: component.NewRender(),
+		Render: component.NewRender(component.WGameSize()),
 		UIGrid: component.UIGrid{
 			ID:      "ui",
 			Rows:    3,
@@ -219,7 +221,7 @@ func (s *Shop) Setup(w engine.World) {
 	w.AddEntities(&ui)
 	// tooltip container
 	mainTTArea := List{
-		Render: component.NewRender(),
+		Render: component.NewRender(component.WGameSize()),
 		UIList: component.UIList{
 			ID:        "shop-item-tooltip",
 			Direction: component.VERTICAL,
@@ -234,7 +236,7 @@ func (s *Shop) Setup(w engine.World) {
 	w.AddEntities(&mainTTArea)
 	// continue button
 	actions := List{
-		Render: component.NewRender(),
+		Render: component.NewRender(component.WGameSize()),
 		UIList: component.UIList{
 			ID:        "actions",
 			Direction: component.VERTICAL,

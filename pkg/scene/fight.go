@@ -38,9 +38,11 @@ func (f *Fight) Setup(w engine.World) {
 		x, y := w.Bounds().Dx()/2, w.Bounds().Dy()/2 // rand.Intn(w.Bounds().Dx()-100)+50, rand.Intn(w.Bounds().Dy()-100)+50
 		fighter := Fighter{
 			NPC:    enemy,
-			Render: component.NewRender(component.WRenderPosition(float64(x), float64(y)), component.WRenderSize(32, 32)),
+			Render: component.NewRender(component.WRenderPosition(float64(x), float64(y))),
 			Rect: component.Rect{
 				Color: colornames.Red400,
+				W:     32,
+				H:     32,
 			},
 			Follow:   component.Follow{Speed: 2},
 			Velocity: component.Velocity{},
@@ -59,9 +61,11 @@ func (f *Fight) Setup(w engine.World) {
 		x, y := 0, w.Bounds().Dy()/2 // rand.Intn(w.Bounds().Dx()-100)+50, rand.Intn(w.Bounds().Dy()-100)+50
 		fighter := Fighter{
 			NPC:    ally,
-			Render: component.NewRender(component.WRenderPosition(float64(x), float64(y)), component.WRenderSize(32, 32)),
+			Render: component.NewRender(component.WRenderPosition(float64(x), float64(y))),
 			Rect: component.Rect{
 				Color: colornames.Green400,
+				W:     32,
+				H:     32,
 			},
 			Follow:   component.Follow{Speed: 1},
 			Velocity: component.Velocity{},

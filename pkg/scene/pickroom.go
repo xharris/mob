@@ -35,7 +35,7 @@ func (c *PickRoom) Setup(w engine.World) {
 	system.AddSystems(w)
 
 	pickGrid := PickGrid{
-		Render: component.NewRender(),
+		Render: component.NewRender(component.WGameSize()),
 		UIGrid: component.UIGrid{
 			ID:      "pick-grid",
 			Rows:    3,

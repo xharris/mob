@@ -33,7 +33,7 @@ func (u *UITest) Setup(w engine.World) {
 	w.AddSystems(&system.UIGridLayout{}, &system.RenderSystem{}, &system.UIRenderLabel{}, &system.UIListLayout{})
 
 	grid := TestContainer{
-		Render: component.NewRender(),
+		Render: component.NewRender(component.WGameSize()),
 		UIGrid: component.UIGrid{
 			ID:      "test",
 			Rows:    3,
@@ -41,7 +41,7 @@ func (u *UITest) Setup(w engine.World) {
 		},
 	}
 	autoGrid := TestContainer{
-		Render: component.NewRender(),
+		Render: component.NewRender(component.WGameSize()),
 		UIGrid: component.UIGrid{
 			ID:      "auto-grid",
 			Columns: 3,
@@ -110,7 +110,7 @@ func (u *UITest) Setup(w engine.World) {
 				w.AddEntities(&sublist)
 				for range 3 {
 					txt := TestLabel{
-						Render: component.NewRender(),
+						Render: component.NewRender(component.WRenderDebug()),
 						UILabel: component.UILabel{
 							Text: []component.UILabelText{
 								{Text: fmt.Sprintf("row %d", x), Color: colornames.White},
@@ -137,7 +137,7 @@ func (u *UITest) Setup(w engine.World) {
 				w.AddEntities(&subsubgrid)
 				for i := range 3 {
 					txt := TestLabel{
-						Render: component.NewRender(),
+						Render: component.NewRender(component.WRenderDebug()),
 						UILabel: component.UILabel{
 							Text: []component.UILabelText{
 								{Text: fmt.Sprintf("center %d", i), Color: colornames.White},

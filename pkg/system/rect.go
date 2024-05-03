@@ -3,6 +3,7 @@ package system
 import (
 	"mob/pkg/component"
 
+	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/vector"
 	"github.com/sedyh/mizu/pkg/engine"
 )
@@ -12,8 +13,7 @@ type RenderRect struct {
 	*component.Render
 }
 
-func (r *RenderRect) Update(w engine.World) {
-	size := r.Render.Image.Bounds()
-	r.Render.OX, r.Render.OY = float64(size.Dx()/2), float64(size.Dy()/2)
-	vector.DrawFilledRect(r.Render.Image, 0, 0, float32(size.Dx()), float32(size.Dy()), r.Rect.Color, false)
+func (r *RenderRect) Draw(w engine.World, _ *ebiten.Image) {
+	texture := r.Render.GetTexture(r.Rect, r.Rect.W, r.Rect.H)
+	vector.DrawFilledRect(texture.Image, 0, 0, float32(r.Rect.W), float32(r.Rect.H), r.Rect.Color, false)
 }

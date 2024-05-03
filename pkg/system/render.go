@@ -1,6 +1,7 @@
 package system
 
 import (
+	"log/slog"
 	"mob/pkg/component"
 	"sort"
 
@@ -21,31 +22,28 @@ func (r *RenderSystem) Draw(w engine.World, screen *ebiten.Image) {
 	for _, entity := range rs.entities {
 		var render *component.Render
 		entity.Get(&render)
-		if !render.Visible || render.Image == nil {
+		if !render.Visible {
 			continue
 		}
-		op := render.DrawImageOptions
-		op.GeoM.Reset()
-		op.GeoM.Translate(-render.OX, -render.OY)
-		op.GeoM.Translate(render.X, render.Y)
-		// alpha
-		op.ColorScale.Reset()
-		op.ColorScale.ScaleAlpha(float32(render.AlphaLevel) / float32(component.AlphaFull))
-		rw, rh := render.GetSize()
-		// draw rect
-		if render.Debug {
-			vector.StrokeRect(
-				render.Image,
-				1, 1, float32(rw-1), float32(rh-1),
-				1, colornames.Green200, false,
-			)
-			vector.StrokeLine(
-				render.Image,
-				0, 0, float32(rw), float32(rh),
-				1, colornames.Green200, false,
-			)
+		for _, texture := range render.Textures {
+			textureOptions := texture.RenderGeometry.GetOptions(render.RenderGeometry)
+			// draw rect
+			if render.Debug {
+				slog.Info("render")
+				tw, th := float32(texture.Image.Bounds().Dx()-1), float32(texture.Image.Bounds().Dy()-1)
+				vector.StrokeRect(
+					texture.Image,
+					1, 1, tw-1, th-1,
+					1, colornames.Green200, false,
+				)
+				vector.StrokeLine(
+					texture.Image,
+					1, 1, tw-1, th-1,
+					1, colornames.Green200, false,
+				)
+			}
+			screen.DrawImage(texture.Image, &textureOptions)
 		}
-		screen.DrawImage(render.Image, op)
 	}
 }
 

@@ -109,21 +109,21 @@ func (ui *UIListLayout) Update(w engine.World) {
 		render.X = ui.Render.X + x
 		render.Y = ui.Render.Y + y
 
-		dx, dy := float64(ui.Render.Image.Bounds().Dx()), float64(ui.Render.Image.Bounds().Dy())
+		dx, dy := ui.Render.GetSize()
 		if ui.UIList.Direction == component.HORIZONTAL {
 			x += float64(childW)
 			// alignment
 			if ui.UIList.Justify == component.CENTER {
-				render.X += dx/2 - float64(childW)/2
+				render.X += float64(dx)/2 - float64(childW)/2
 			}
 			if ui.UIList.Justify == component.END {
-				render.X += dx - float64(childW)
+				render.X += float64(dx) - float64(childW)
 			}
 			if ui.UIList.Align == component.CENTER {
-				render.Y += dy/2 - float64(childH)/2
+				render.Y += float64(dy)/2 - float64(childH)/2
 			}
 			if ui.UIList.Align == component.END {
-				render.Y += dy - float64(childH)
+				render.Y += float64(dy) - float64(childH)
 			}
 		}
 
@@ -131,16 +131,16 @@ func (ui *UIListLayout) Update(w engine.World) {
 			y += float64(childH)
 			// alignment
 			if ui.UIList.Align == component.CENTER {
-				render.X += dx/2 - float64(childW)/2
+				render.X += float64(dx)/2 - float64(childW)/2
 			}
 			if ui.UIList.Align == component.END {
-				render.X += dx - float64(childW)
+				render.X += float64(dx) - float64(childW)
 			}
 			if ui.UIList.Justify == component.CENTER {
-				render.Y += dy/2 - float64(childH)/2
+				render.Y += float64(dy)/2 - float64(childH)/2
 			}
 			if ui.UIList.Justify == component.END {
-				render.Y += dy - float64(childH)
+				render.Y += float64(dy) - float64(childH)
 			}
 		}
 		// TODO use render.GeoM.Apply instead? or just set these values to 0?
@@ -158,10 +158,11 @@ type UIRenderLabel struct {
 	*component.UILabel
 }
 
-func (t *UIRenderLabel) Update(world engine.World) {
+func (t *UIRenderLabel) Update(w engine.World) {
 	var x, y float64
 	var totalW, totalH float64
-	t.Render.Image.Clear()
+	texture := t.Render.GetTexture(t.UILabel, w.Bounds().Dx(), w.Bounds().Dy())
+	texture.Image.Clear()
 	f := font.DefaultFont
 	if t.UILabel.Font != nil {
 		f = t.UILabel.Font
@@ -197,7 +198,7 @@ func (t *UIRenderLabel) Update(world engine.World) {
 				}
 				op.ColorScale.ScaleWithColor(color)
 				// draw
-				text.Draw(t.Render.Image, string(char), &ff, op)
+				text.Draw(texture.Image, string(char), &ff, op)
 				// measure
 				txtW, txtH := f.Measure(string(char))
 				// space between chars
@@ -220,7 +221,7 @@ func (t *UIRenderLabel) Update(world engine.World) {
 			}
 		}
 	}
-	t.Render.Resize(int(totalW+2), int(totalH)) // TODO why do I have to add 2?
+	texture.Resize(int(totalW+2), int(totalH)) // TODO why do I have to add 2?
 }
 
 type UIRenderChild struct {

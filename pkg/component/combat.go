@@ -2,6 +2,7 @@ package component
 
 import (
 	"log/slog"
+	"math/rand"
 	"mob/pkg/timer"
 	"slices"
 
@@ -87,7 +88,15 @@ func (c *Combat) Reset() {
 
 func (c *Combat) sortMods() {
 	slices.SortStableFunc(c.Mods, func(a Mod, b Mod) int {
-		return int(b.Order) - int(a.Order)
+		bo := b.Order
+		ao := a.Order
+		if ao == OrderRandom {
+			ao = ModOrder(rand.Intn(int(OrderRandom)))
+		}
+		if bo == OrderRandom {
+			bo = ModOrder(rand.Intn(int(OrderRandom)))
+		}
+		return int(bo) - int(ao)
 	})
 }
 
@@ -130,7 +139,9 @@ func (c *Combat) UseMove(w engine.World, self engine.Entity, target engine.Entit
 	if currentMoveIsDone {
 		// move just finished, reset stuff
 		slog.Info("finished move", "name", c.CurrentMoveTick.Name)
-		c.Reset()
+		if c.Skip <= 0 {
+			c.Reset()
+		}
 		if currentMod.Once {
 			// remove from mods
 			var newMods []Mod
